@@ -30,6 +30,14 @@ Problem:
 {Question}
 """
 
+QUERY_TEMPLATE_INSTRUCT_BOXED_202602 = """Solve the following problem from the HMMT February 2026 competition.
+
+Please reason step by step, and put your final answer within \\boxed{{}} on the last line.
+
+Problem:
+{Question}
+"""
+
 
 def doc_to_text(doc: dict) -> str:
     q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
@@ -44,6 +52,12 @@ def doc_to_text_instruct_202502(doc: dict) -> str:
 def doc_to_text_instruct_202511(doc: dict) -> str:
     q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
     return QUERY_TEMPLATE_INSTRUCT_BOXED_202511.format(Question=q)
+
+
+def doc_to_text_instruct_202602(doc: dict) -> str:
+    q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
+    return QUERY_TEMPLATE_INSTRUCT_BOXED_202602.format(Question=q)
+
 
 def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
     def _process_doc(doc: dict) -> dict:
