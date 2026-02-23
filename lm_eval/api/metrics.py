@@ -41,6 +41,11 @@ def median(arr):
     return arr[len(arr) // 2]
 
 
+@register_aggregation("sum")
+def sum_agg(arr):
+    return sum(arr)
+
+
 # Certain metrics must be calculated across all documents in a benchmark.
 # We use them as aggregation metrics, paired with no-op passthrough metric fns.
 @register_aggregation("perplexity")

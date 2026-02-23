@@ -1,0 +1,4 @@
+include: hmmt_202502_agg8_verify_instruct.yaml
+task: custom_hmmt_202511_agg8_verify_instruct
+dataset_path: MathArena/hmmt_nov_2025
+doc_to_text: !function hmmt_verutils.doc_to_text_instruct_202511

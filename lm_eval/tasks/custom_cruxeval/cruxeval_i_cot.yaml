@@ -1,0 +1,57 @@
+task: custom_cruxeval_i_cot
+
+dataset_path: cruxeval-org/cruxeval
+dataset_name: null
+
+test_split: test
+fewshot_split: null
+
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: |
+  You will be given a function f and an output in the form f(??) == output. Your task is to find any input such that executing f on the input leads to the given output. There may be multiple answers, but only output one. First, think step by step. You MUST surround the answer with [ANSWER] and [/ANSWER] tags. Express your answer as a passing assertion containing the input and the given output. Write [/ANSWER] on its own line after the answer.
+
+  [PYTHON]
+  def f(x):
+      return x + 1
+  assert f(??) == 17
+  [/PYTHON]
+  <think>
+  To find an input such that executing f on the input leads to the given output, we can work backwards from the given assertion. We know that f(??) == 17. 
+
+  Since the function f(x) returns x + 1, for f(??) to be equal to 17, the value of ?? should be 16. 
+  </think>
+  [ANSWER]
+  assert f(16) == 17
+  [/ANSWER]
+
+  [PYTHON]
+  {{code}}
+  assert f(??) == {{output}}
+  [/PYTHON]
+
+gen_prefix: ""
+
+doc_to_target: "{{input}}"
+
+unsafe_code: true
+
+process_results: !function cruxeval_lm_eval.cruxeval_process_results_input
+
+generation_kwargs:
+  temperature: 0.2
+  do_sample: true
+  max_gen_toks: 3072
+  until:
+    - "\n[/ANSWER]\n"
+    - "\n[/ANSWER]"
+
+metric_list:
+  - metric: pass_at_1
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 1.0
+  description: "CRUXEval-I (input prediction) using make_cot_input_prompt-style formatting with [THOUGHT] + [ANSWER] tags."

@@ -357,9 +357,8 @@ class EvaluationTracker:
                                 arguments[f"gen_args_{i}"][f"arg_{j}"] = tmp
 
                         sample["resps"] = sanitize_list(sample["resps"])
-                        sample["filtered_resps"] = sanitize_list(
-                            sample["filtered_resps"]
-                        )
+                        if "filtered_resps" in sample:
+                            sample["filtered_resps"] = sanitize_list(sample["filtered_resps"])
                         sample["arguments"] = arguments
                         sample["target"] = str(sample["target"])
 

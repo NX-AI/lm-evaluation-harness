@@ -1,0 +1,20 @@
+include: cruxeval_o_zeroshot.yaml
+task: custom_cruxeval_64_o_zeroshot
+
+repeats: 64
+
+generation_kwargs:
+  temperature: 0.2
+  do_sample: true
+  max_gen_toks: 3072
+  until:
+    - "\n[/ANSWER]\n"
+    - "\n[/ANSWER]"
+
+metric_list:
+  - metric: pass_at_1
+    aggregation: mean
+    higher_is_better: true
+  - metric: pass_at_16
+    aggregation: mean
+    higher_is_better: true

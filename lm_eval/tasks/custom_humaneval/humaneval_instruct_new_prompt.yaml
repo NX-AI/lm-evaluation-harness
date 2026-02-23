@@ -1,0 +1,17 @@
+include: humaneval.yaml
+task: custom_humaneval_instruct_new_prompt
+#doc_to_text: "Write a solution to the following problem and make sure that it passes the tests:\n```{{prompt}}"
+doc_to_text:  |-
+  Here is a problem for which you need to generate/complete code:
+  ``` {{prompt}}
+
+  Please continue to complete the function with python programming language. You are not allowed to modify the given code and do the completion only.
+gen_prefix: "Here is the completed function:\n```python\n{{prompt}}\n"
+filter_list:
+  - name: "create_test"
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.build_predictions_instruct
+metadata:
+  version: 2.0
+#  The solution should be in the following format:\n```python\n{{prompt}}\n

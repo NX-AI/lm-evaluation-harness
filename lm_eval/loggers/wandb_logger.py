@@ -209,7 +209,8 @@ class WandbLogger:
         labels = [x["target"] for x in data]
         instance = [""] * len(ids)
         resps = [""] * len(ids)
-        filtered_resps = [""] * len(ids)
+        has_filtered_resps = bool(data) and ("filtered_resps" in data[0])
+        filtered_resps = [""] * len(ids) if has_filtered_resps else None
         model_outputs = {}
 
         metrics_list = config["metric_list"]
@@ -236,14 +237,15 @@ class WandbLogger:
                 )
                 for x in data
             ]
-            filtered_resps = [
-                f"log probability of continuation is {x['filtered_resps'][0][0]} "
-                + "\n\n"
-                + "continuation will {} generated with greedy sampling".format(
-                    "not be" if not x["filtered_resps"][0][1] else "be"
-                )
-                for x in data
-            ]
+            if has_filtered_resps:
+                filtered_resps = [
+                    f"log probability of continuation is {x['filtered_resps'][0][0]} "
+                    + "\n\n"
+                    + "continuation will {} generated with greedy sampling".format(
+                        "not be" if not x["filtered_resps"][0][1] else "be"
+                    )
+                    for x in data
+                ]
         elif config["output_type"] == "multiple_choice":
             instance = [x["arguments"][0][0] for x in data]
             choices = [
@@ -251,20 +253,24 @@ class WandbLogger:
                 for x in data
             ]
             resps = [np.argmax([n[0][0] for n in x["resps"]]) for x in data]
-            filtered_resps = [
-                np.argmax([n[0] for n in x["filtered_resps"]]) for x in data
-            ]
+            if has_filtered_resps:
+                filtered_resps = [
+                    np.argmax([n[0] for n in x["filtered_resps"]]) for x in data
+                ]
         elif config["output_type"] == "loglikelihood_rolling":
             instance = [x["arguments"][0][0] for x in data]
             resps = [x["resps"][0][0] for x in data]
-            filtered_resps = [x["filtered_resps"][0] for x in data]
+            if has_filtered_resps:
+                filtered_resps = [x["filtered_resps"][0] for x in data]
         elif config["output_type"] == "generate_until":
             instance = [x["arguments"][0][0] for x in data]
             resps = [x["resps"][0][0] for x in data]
-            filtered_resps = [x["filtered_resps"][0] for x in data]
+            if has_filtered_resps:
+                filtered_resps = [x["filtered_resps"][0] for x in data]
 
         model_outputs["raw_predictions"] = resps
-        model_outputs["filtered_predictions"] = filtered_resps
+        if has_filtered_resps:
+            model_outputs["filtered_predictions"] = filtered_resps
 
         df_data = {
             "id": ids,

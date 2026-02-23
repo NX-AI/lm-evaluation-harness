@@ -1,0 +1,42 @@
+tag:
+  - gpqa
+task: custom_gpqa_main_cot_zeroshot_boxed
+dataset_path: Idavidrein/gpqa
+dataset_name: gpqa_main
+process_docs: !function utils_boxed.process_docs
+output_type: generate_until
+training_split: train
+validation_split: train
+test_split: null
+
+doc_to_text: |
+  Given the following question and four candidate answers (A, B, C and D), choose the best answer.
+
+  Question: {{Question}}
+  Choices:
+  (A) {{choice1}}
+  (B) {{choice2}}
+  (C) {{choice3}}
+  (D) {{choice4}}
+
+  Think step by step but try to reason concisely. Then on a new line output the best choice as \boxed{<LETTER>} where <LETTER> is one of A, B, C or D.
+
+doc_to_target: answer
+
+process_results: !function utils_boxed.process_results
+
+generation_kwargs:
+  until:
+    - "</s>"
+  do_sample: false
+  temperature: 0.0
+
+num_fewshot: 0
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 1.0
+

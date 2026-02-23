@@ -1,0 +1,43 @@
+task: custom_cruxeval_o_zeroshot
+
+dataset_path: cruxeval-org/cruxeval
+dataset_name: null
+
+test_split: test
+fewshot_split: null
+
+output_type: generate_until
+num_fewshot: 0
+
+doc_to_text: |
+  You are given a Python function and an assertion containing an input to the function. Complete the assertion with a literal (no unsimplified expressions, no function calls) containing the output when executing the provided code on the given input, even if the function is incorrect or incomplete. Do NOT output any extra information. Provide the full assertion with the correct output in [ANSWER] and [/ANSWER] tags, following the examples. Write [/ANSWER] on its own line after the answer.
+
+  ```python
+  {{code}}
+  assert f({{input}}) == ??
+  ```python
+
+gen_prefix: ""
+
+doc_to_target: "{{output}}"
+
+unsafe_code: true
+
+process_results: !function cruxeval_lm_eval.cruxeval_process_results_output
+
+generation_kwargs:
+  temperature: 0.2
+  do_sample: true
+  max_gen_toks: 3072
+  until:
+    - "\n[/ANSWER]\n"
+    - "\n[/ANSWER]"
+
+metric_list:
+  - metric: pass_at_1
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 1.0
+  description: "CRUXEval-O (output prediction) using make_direct_output_prompt-style formatting with [ANSWER] tags."
