@@ -63,7 +63,7 @@ def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
         answer = doc.get("answer") or doc.get("Answer") or doc.get("orig_answer") or doc.get("orig_orig_answer")
 
         out_doc = {"problem": problem, "solution": solution, "answer": answer}
-        if getattr(doc, "few_shot", None) is not None:
+        if doc.get("few_shot", None) is not None:
             out_doc["few_shot"] = True
         return out_doc
 
