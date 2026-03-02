@@ -1,7 +1,7 @@
 tag:
   - chemistry
   - moleculariq
-task: moleculariq_pass_at_k
+task: custom_moleculariq_pass_at_k
 description: |
   You are an expert chemist. Answer molecular property, understanding, structural analysis and molecular generation questions precisely and accurately.
 

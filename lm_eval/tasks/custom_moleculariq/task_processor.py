@@ -10,7 +10,7 @@ import datasets
 from moleculariq_core import evaluate_answer
 from tqdm import tqdm
 
-from lm_eval.tasks.moleculariq.extractors import extract_moleculariq_answer
+from lm_eval.tasks.custom_moleculariq.extractors import extract_moleculariq_answer
 
 
 class MolecularIQProcessor:

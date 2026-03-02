@@ -1,7 +1,7 @@
 tag:
   - chemistry
   - moleculariq
-task: moleculariq_inline
+task: custom_moleculariq_inline
 dataset_path: tschouis/moleculariq_arxiv
 dataset_name: default
 process_docs: !function task_processor.process_docs
