@@ -1,0 +1,13 @@
+include: lcc.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_lcc_cot
+doc_to_text: "Please complete the code given below. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> is only the next line of code.\n{{context}}Next line of code:\n\nResponse:"
+process_results: !function utils_cot.get_code_sim_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

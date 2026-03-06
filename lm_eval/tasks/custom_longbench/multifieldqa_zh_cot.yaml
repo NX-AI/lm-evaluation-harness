@@ -1,0 +1,13 @@
+include: multifieldqa_zh.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_multifieldqa_zh_cot
+doc_to_text: "阅读以下文字并用中文简短回答。请简要地逐步思考，然后以 \"Answer: <text>\" 给出最终答案，其中 <text> 只包含简短答案，不要包含额外解释。\n\n{{context}}\n\n问题：{{question}}\n\n回答："
+process_results: !function utils_cot.get_qa_f1_zh_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

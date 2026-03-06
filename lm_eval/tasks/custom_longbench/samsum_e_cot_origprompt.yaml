@@ -1,0 +1,12 @@
+include: samsum_e.yaml
+
+tag:
+  - custom_longbench_cot_origprompt_tasks
+task: custom_longbench_samsum_e_cot_origprompt
+process_results: !function utils_cot.get_rouge_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

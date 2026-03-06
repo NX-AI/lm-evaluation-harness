@@ -1,0 +1,13 @@
+include: passage_retrieval_en_e.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_passage_retrieval_en_e_cot
+doc_to_text: "Here are 30 paragraphs from Wikipedia, along with an abstract. Please determine which paragraph the abstract is from. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> must be in the format \"Paragraph 1\", \"Paragraph 2\", and so on.\n\n{{context}}\n\nThe following is an abstract.\n\n{{question}}\n\nResponse:"
+process_results: !function utils_cot.get_retrieval_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

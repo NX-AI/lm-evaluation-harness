@@ -1,0 +1,13 @@
+include: multi_news_e.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_multi_news_e_cot
+doc_to_text: "You are given several news passages. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> is a one-page summary of all the news.\n\nNews:\n{{context}}\n\nResponse:"
+process_results: !function utils_cot.get_rouge_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

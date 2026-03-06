@@ -1,0 +1,12 @@
+include: narrativeqa.yaml
+
+tag:
+  - custom_longbench_cot_origprompt_tasks
+task: custom_longbench_narrativeqa_cot_origprompt
+process_results: !function utils_cot.get_qa_f1_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

@@ -1,0 +1,22 @@
+group: custom_longbench_cot_en_base_origprompt
+group_alias: "LongBench v1 (Original prompts, extraction, English base tasks)"
+task:
+  - custom_longbench_narrativeqa_cot_origprompt
+  - custom_longbench_qasper_cot_origprompt
+  - custom_longbench_multifieldqa_en_cot_origprompt
+  - custom_longbench_hotpotqa_cot_origprompt
+  - custom_longbench_2wikimqa_cot_origprompt
+  - custom_longbench_musique_cot_origprompt
+  - custom_longbench_gov_report_cot_origprompt
+  - custom_longbench_qmsum_cot_origprompt
+  - custom_longbench_multi_news_cot_origprompt
+  - custom_longbench_trec_cot_origprompt
+  - custom_longbench_triviaqa_cot_origprompt
+  - custom_longbench_samsum_cot_origprompt
+  - custom_longbench_lcc_cot_origprompt
+  - custom_longbench_repobench-p_cot_origprompt
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

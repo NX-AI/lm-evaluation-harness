@@ -1,0 +1,13 @@
+include: multifieldqa_en.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_multifieldqa_en_cot
+doc_to_text: "Read the following text and answer briefly. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> is brief and contains only the answer.\n\n{{context}}\n\nQuestion: {{question}}\n\nResponse:"
+process_results: !function utils_cot.get_qa_f1_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

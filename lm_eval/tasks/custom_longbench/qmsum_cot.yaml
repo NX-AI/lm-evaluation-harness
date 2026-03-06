@@ -1,0 +1,13 @@
+include: qmsum.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_qmsum_cot
+doc_to_text: "You are given a meeting transcript and a query containing a question or instruction. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> answers the query in one or more sentences.\n\nTranscript:\n{{context}}\n\nQuery: {{question}}\n\nResponse:"
+process_results: !function utils_cot.get_rouge_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

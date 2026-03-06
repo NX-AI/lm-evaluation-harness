@@ -1,0 +1,12 @@
+group: custom_longbench_single
+group_alias: "Single-Document QA"
+task:
+  - custom_longbench_narrativeqa
+  - custom_longbench_qasper
+  - custom_longbench_multifieldqa_en
+  - custom_longbench_multifieldqa_zh
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

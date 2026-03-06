@@ -1,0 +1,9 @@
+group: custom_longbench_cot_origprompt
+group_alias: "LongBench v1 (Original prompts, extraction)"
+task:
+  - custom_longbench_cot_origprompt_tasks
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

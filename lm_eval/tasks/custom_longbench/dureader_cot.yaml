@@ -1,0 +1,13 @@
+include: dureader.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_dureader_cot
+doc_to_text: "请基于给定的文章回答下述问题。请简要地逐步思考，然后以 \"Answer: <text>\" 给出最终答案，其中 <text> 只包含对问题的回答，不要包含额外解释。\n\n文章：{{context}}\n\n问题：{{question}}\n\n回答："
+process_results: !function utils_cot.get_rouge_zh_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

@@ -1,0 +1,13 @@
+include: passage_count_e.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_passage_count_e_cot
+doc_to_text: "There are some paragraphs below sourced from Wikipedia. Some of them may be duplicates. Please carefully read these paragraphs and determine how many unique paragraphs there are after removing duplicates. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> is only the final count number.\n\n{{context}}\n\nResponse:"
+process_results: !function utils_cot.get_count_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

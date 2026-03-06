@@ -1,0 +1,11 @@
+group: custom_longbench_e
+task:
+  - custom_longbench_code_e
+  - custom_longbench_fewshot_e
+  - custom_longbench_multi_e
+  - custom_longbench_single_e
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

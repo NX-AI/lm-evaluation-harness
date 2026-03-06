@@ -1,0 +1,12 @@
+group: custom_longbench_summarization
+group_alias: "Summarization"
+task:
+  - custom_longbench_gov_report
+  - custom_longbench_qmsum
+  - custom_longbench_multi_news
+  - custom_longbench_vcsum
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

@@ -1,0 +1,11 @@
+group: custom_longbench_synthetic
+group_alias: "Synthetic Tasks"
+task:
+  - custom_longbench_passage_count
+  - custom_longbench_passage_retrieval_en
+  - custom_longbench_passage_retrieval_zh
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

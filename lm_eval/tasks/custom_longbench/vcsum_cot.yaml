@@ -1,0 +1,13 @@
+include: vcsum.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_vcsum_cot
+doc_to_text: "下面有一段会议记录，请你阅读后，写一段总结，总结会议的内容。请简要地逐步思考，然后以 \"Answer: <text>\" 给出最终答案，其中 <text> 是会议内容的总结。\n会议记录：\n{{context}}\n\n回答："
+process_results: !function utils_cot.get_rouge_zh_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first
