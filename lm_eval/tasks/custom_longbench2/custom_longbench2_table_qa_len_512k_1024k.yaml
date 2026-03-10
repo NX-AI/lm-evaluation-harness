@@ -1,0 +1,8 @@
+include: _custom_longbench2_base.yaml
+tag:
+  - custom_longbench2_bucket_tasks
+task: custom_longbench2_table_qa_len_512k_1024k
+task_alias: "LongBench v2 Table QA (512k-1024k tokens)"
+dataset_kwargs:
+  sub_domain: "Table QA"
+  token_length_bucket: 512k_1024k

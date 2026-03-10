@@ -1,0 +1,9 @@
+group: custom_longbench2
+group_alias: "LongBench v2"
+task:
+  - custom_longbench2_0shot
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

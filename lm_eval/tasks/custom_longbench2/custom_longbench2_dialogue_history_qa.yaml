@@ -1,0 +1,9 @@
+group: custom_longbench2_dialogue_history_qa
+group_alias: "LongBench v2 Dialogue history QA"
+task:
+  - custom_longbench2_dialogue_history_qa_len_64k_128k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

@@ -1,0 +1,16 @@
+class: !function task.MRCRTask
+dataset_path: openai/mrcr
+output_type: generate_until
+test_split: test
+num_fewshot: 0
+generation_kwargs:
+  max_gen_toks: 4096
+  do_sample: false
+  temperature: 0.0
+  until: []
+metric_list:
+  - metric: score
+    aggregation: mean
+    higher_is_better: true
+metadata:
+  version: 1.0

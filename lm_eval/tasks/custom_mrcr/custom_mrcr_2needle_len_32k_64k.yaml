@@ -1,0 +1,8 @@
+include: _custom_mrcr_base
+tag:
+  - custom_mrcr_needle_length_tasks
+task: custom_mrcr_2needle_len_32k_64k
+task_alias: "MRCR 2-needle 32k-64k tokens"
+dataset_kwargs:
+  n_needles: 2
+  length_bin: 32k_64k

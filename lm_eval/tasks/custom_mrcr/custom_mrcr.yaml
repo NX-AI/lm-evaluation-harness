@@ -1,0 +1,11 @@
+group: custom_mrcr
+group_alias: "MRCR"
+task:
+  - custom_mrcr_2needle
+  - custom_mrcr_4needle
+  - custom_mrcr_8needle
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: true
+metadata:
+  version: 1.0

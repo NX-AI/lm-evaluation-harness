@@ -1,0 +1,8 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_bucket_tasks
+task: custom_longbench2_cot_dialogue_history_qa_len_64k_128k
+task_alias: "LongBench v2 CoT Dialogue history QA (64k-128k tokens)"
+dataset_kwargs:
+  sub_domain: "Dialogue history QA"
+  token_length_bucket: 64k_128k

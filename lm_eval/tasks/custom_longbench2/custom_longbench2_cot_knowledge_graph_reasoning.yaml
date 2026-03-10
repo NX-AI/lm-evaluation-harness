@@ -1,0 +1,10 @@
+group: custom_longbench2_cot_knowledge_graph_reasoning
+group_alias: "LongBench v2 CoT Knowledge graph reasoning"
+task:
+  - custom_longbench2_cot_knowledge_graph_reasoning_len_128k_512k
+  - custom_longbench2_cot_knowledge_graph_reasoning_len_512k_1024k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

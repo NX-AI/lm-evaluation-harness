@@ -1,0 +1,8 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_bucket_tasks
+task: custom_longbench2_cot_literary_len_512k_1024k
+task_alias: "LongBench v2 CoT Literary (512k-1024k tokens)"
+dataset_kwargs:
+  sub_domain: "Literary"
+  token_length_bucket: 512k_1024k

@@ -1,0 +1,8 @@
+include: _custom_longbench2_base.yaml
+tag:
+  - custom_longbench2_bucket_tasks
+task: custom_longbench2_event_ordering_len_64k_128k
+task_alias: "LongBench v2 Event ordering (64k-128k tokens)"
+dataset_kwargs:
+  sub_domain: "Event ordering"
+  token_length_bucket: 64k_128k

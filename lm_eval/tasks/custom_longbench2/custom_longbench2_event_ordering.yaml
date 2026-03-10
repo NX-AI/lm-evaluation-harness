@@ -1,0 +1,11 @@
+group: custom_longbench2_event_ordering
+group_alias: "LongBench v2 Event ordering"
+task:
+  - custom_longbench2_event_ordering_len_32k_64k
+  - custom_longbench2_event_ordering_len_64k_128k
+  - custom_longbench2_event_ordering_len_128k_512k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

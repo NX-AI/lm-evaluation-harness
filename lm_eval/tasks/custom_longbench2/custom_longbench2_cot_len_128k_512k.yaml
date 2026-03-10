@@ -1,0 +1,22 @@
+group: custom_longbench2_cot_len_128k_512k
+group_alias: "LongBench v2 CoT 128k-512k tokens"
+task:
+  - custom_longbench2_cot_academic_len_128k_512k
+  - custom_longbench2_cot_code_repo_qa_len_128k_512k
+  - custom_longbench2_cot_detective_len_128k_512k
+  - custom_longbench2_cot_event_ordering_len_128k_512k
+  - custom_longbench2_cot_financial_len_128k_512k
+  - custom_longbench2_cot_governmental_len_128k_512k
+  - custom_longbench2_cot_knowledge_graph_reasoning_len_128k_512k
+  - custom_longbench2_cot_legal_len_128k_512k
+  - custom_longbench2_cot_literary_len_128k_512k
+  - custom_longbench2_cot_many_shot_learning_len_128k_512k
+  - custom_longbench2_cot_multi_news_len_128k_512k
+  - custom_longbench2_cot_new_language_translation_len_128k_512k
+  - custom_longbench2_cot_table_qa_len_128k_512k
+  - custom_longbench2_cot_user_guide_qa_len_128k_512k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

@@ -1,0 +1,5 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_tasks
+task: custom_longbench2_cot_0shot
+task_alias: "LongBench v2 CoT 0-shot"

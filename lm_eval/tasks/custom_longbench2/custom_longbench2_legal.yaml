@@ -1,0 +1,13 @@
+group: custom_longbench2_legal
+group_alias: "LongBench v2 Legal"
+task:
+  - custom_longbench2_legal_len_0_16k
+  - custom_longbench2_legal_len_16k_32k
+  - custom_longbench2_legal_len_32k_64k
+  - custom_longbench2_legal_len_64k_128k
+  - custom_longbench2_legal_len_128k_512k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

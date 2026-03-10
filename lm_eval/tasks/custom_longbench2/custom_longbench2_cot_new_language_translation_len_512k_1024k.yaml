@@ -1,0 +1,8 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_bucket_tasks
+task: custom_longbench2_cot_new_language_translation_len_512k_1024k
+task_alias: "LongBench v2 CoT New language translation (512k-1024k tokens)"
+dataset_kwargs:
+  sub_domain: "New language translation"
+  token_length_bucket: 512k_1024k

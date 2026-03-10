@@ -1,0 +1,8 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_bucket_tasks
+task: custom_longbench2_cot_financial_len_128k_512k
+task_alias: "LongBench v2 CoT Financial (128k-512k tokens)"
+dataset_kwargs:
+  sub_domain: "Financial"
+  token_length_bucket: 128k_512k
