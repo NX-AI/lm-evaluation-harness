@@ -19,7 +19,7 @@ doc_to_text: |
   (C) {{choice3}}
   (D) {{choice4}}
 
-  Think step by step but try to reason concisely. Then on a new line output the best choice as \boxed{<LETTER>} where <LETTER> is one of A, B, C or D.
+  Think step by step but keep the reasoning concise. On the final line, output only the best choice as \boxed{<LETTER>} where <LETTER> is one of A, B, C, or D.
 
 doc_to_target: answer
 
@@ -36,7 +36,18 @@ metric_list:
   - metric: exact_match
     aggregation: mean
     higher_is_better: true
+  - metric: no_answer_rate
+    aggregation: mean
+    higher_is_better: false
+  - metric: no_answer_count
+    aggregation: sum
+    higher_is_better: false
+  - metric: num_generations
+    aggregation: sum
+    higher_is_better: false
+  - metric: extracted_answers
+    aggregation: bypass
+    higher_is_better: false
 
 metadata:
   version: 1.0
-

@@ -1,6 +1,6 @@
 tag:
   - gpqa
-task: gpqa_main_cot_zeroshot_boxed
+task: gpqa_main_cot_zeroshot_boxed_agg8
 dataset_path: Idavidrein/gpqa
 dataset_name: gpqa_main
 process_docs: !function utils_boxed.process_docs
@@ -25,15 +25,26 @@ doc_to_target: answer
 
 process_results: !function utils_boxed.process_results
 
+repeats: 8
+
 generation_kwargs:
   until:
     - "</s>"
-  do_sample: false
-  temperature: 0.0
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  do_sample: true
+  temperature: 0.6
+  max_gen_toks: 4096
+
+filter_list:
+  - name: "all"
+    filter:
+      - function: "take_first_k"
+        k: 8
 
 num_fewshot: 0
 metric_list:
-  - metric: exact_match
+  - metric: avg_score
     aggregation: mean
     higher_is_better: true
   - metric: no_answer_rate
@@ -48,6 +59,18 @@ metric_list:
   - metric: extracted_answers
     aggregation: bypass
     higher_is_better: false
+  - metric: majority@1
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@2
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@4
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@8
+    aggregation: mean
+    higher_is_better: true
 
 metadata:
   version: 1.0

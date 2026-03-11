@@ -1,9 +1,12 @@
-from typing import Dict, List, Optional
+from collections import Counter
+from typing import Any, Dict, List, Optional
 import datasets
 import re
 import random
 
 MCQ_OPTIONS = tuple("ABCDEFGHIJ")
+MAJORITY_KS = (1, 2, 4, 8)
+_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
 
 def preprocess(text):
     if text is None:
@@ -37,6 +40,21 @@ def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
         return out_doc
 
     return dataset.map(_process_doc)
+
+
+def strip_think_blocks(text: str) -> str:
+    """Remove reasoning traces wrapped in <think> tags before answer extraction."""
+    if not isinstance(text, str):
+        text = str(text)
+    text = text.replace("\r", "")
+
+    lowered = text.lower()
+    if "<think>" in lowered and "</think>" not in lowered:
+        return ""
+
+    text = re.sub(_THINK_BLOCK_RE, "", text)
+    text = re.sub(r"</?think>", "", text, flags=re.IGNORECASE)
+    return text.strip()
 
 # ----------------
 # Robust extractor
@@ -139,7 +157,8 @@ def normalize_mcq_label(s: Optional[str]) -> Optional[str]:
 
 def extract_mcq_from_output(s: str) -> Optional[str]:
     """Primary: last \\boxed{...}. Fallbacks: 'The answer is A' or last '(A)'."""
-    payload = extract_last_boxed_content(s)
+    cleaned = strip_think_blocks(s)
+    payload = extract_last_boxed_content(cleaned)
     lab = normalize_mcq_label(payload)
     if lab:
         return lab
@@ -150,12 +169,12 @@ def extract_mcq_from_output(s: str) -> Optional[str]:
         r"Answer\s*:\s*([A-Ja-j])",
         r"choice\s*[:=]?\s*([A-Ja-j])",
     ]:
-        m = re.search(pat, s, flags=re.IGNORECASE)
+        m = re.search(pat, cleaned, flags=re.IGNORECASE)
         if m:
             return m.group(1).upper()
 
     # Fallback 2
-    candidates = list(re.finditer(r"\(([A-Ja-j])\)", s))
+    candidates = list(re.finditer(r"\(([A-Ja-j])\)", cleaned))
     if candidates:
         return candidates[-1].group(1).upper()
 
@@ -165,8 +184,67 @@ def extract_mcq_from_output(s: str) -> Optional[str]:
 # Harness glue
 # ----------------
 
-def process_results(doc: dict, results: List[str]) -> Dict[str, int]:
-    """results[0] is the full model generation."""
-    pred = extract_mcq_from_output(results[0])
-    gold = doc["answer"]  # e.g., "A"
-    return {"exact_match": 1 if (pred is not None and pred == gold) else 0}
+def _flatten_results(results: List[str]) -> List[str]:
+    while results and isinstance(results[0], list):
+        if len(results) == 1:
+            results = results[0]
+        else:
+            results = [x for sub in results for x in sub]
+    return results
+
+
+def process_results(doc: dict, results: List[str]) -> Dict[str, Any]:
+    """NeMo-style flat metrics with AIME-aligned no-answer bookkeeping."""
+    if not results:
+        out = {
+            "avg_score": 0.0,
+            "exact_match": 0.0,
+            "no_answer_rate": 1.0,
+            "no_answer_count": 0,
+            "num_generations": 0,
+            "extracted_answers": [],
+        }
+        for k in MAJORITY_KS:
+            out[f"majority@{k}"] = 0.0
+        return out
+
+    results = _flatten_results(results)
+    gold = str(doc["answer"]).strip().upper()
+
+    predicted_answers: List[Optional[str]] = []
+    scores: List[float] = []
+
+    for gen in results:
+        pred = extract_mcq_from_output(str(gen))
+        predicted_answers.append(pred)
+        scores.append(1.0 if (pred is not None and pred == gold) else 0.0)
+
+    n = len(scores)
+    no_answer_count = sum(1 for ans in predicted_answers if ans is None)
+    avg_score = float(sum(scores) / n) if n else 0.0
+    out = {
+        "avg_score": avg_score,
+        "exact_match": avg_score,
+        "no_answer_rate": float(no_answer_count / n) if n else 1.0,
+        "no_answer_count": no_answer_count,
+        "num_generations": n,
+        "extracted_answers": predicted_answers,
+    }
+
+    for k in MAJORITY_KS:
+        k_eff = min(k, n)
+
+        valid_answers_and_scores = [
+            (pred_answer, score)
+            for pred_answer, score in zip(predicted_answers[:k_eff], scores[:k_eff])
+            if pred_answer is not None
+        ]
+        if not valid_answers_and_scores:
+            out[f"majority@{k}"] = 0.0
+        else:
+            counter = Counter(valid_answers_and_scores)
+            majority_count = counter.most_common(1)[0][1]
+            tied_pairs = [(ans, sc) for (ans, sc), cnt in counter.items() if cnt == majority_count]
+            out[f"majority@{k}"] = float(sum(sc for _, sc in tied_pairs) / len(tied_pairs))
+
+    return out

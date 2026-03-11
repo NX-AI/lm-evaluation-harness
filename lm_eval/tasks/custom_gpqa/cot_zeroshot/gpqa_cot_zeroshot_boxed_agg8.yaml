@@ -1,0 +1,3 @@
+include: _gpqa_cot_zeroshot_boxed_agg8_yaml
+
+task: custom_gpqa_main_cot_zeroshot_boxed_agg8
