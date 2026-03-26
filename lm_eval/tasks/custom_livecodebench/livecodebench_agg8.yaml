@@ -1,4 +1,4 @@
-task: livecodebench_agg8
+task: custom_livecodebench_agg8
 custom_dataset: !function utils.load_livecodebench_codegen_dataset
 dataset_kwargs:
   metric_ks: [1, 2, 4, 8]
