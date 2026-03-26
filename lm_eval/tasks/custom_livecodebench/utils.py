@@ -16,7 +16,6 @@ import time
 import urllib.error
 import urllib.request
 from collections import Counter
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,7 +23,6 @@ from typing import Any
 import datasets
 
 
-@dataclass(frozen=True)
 class PromptConstants:
     """Prompt strings from LiveCodeBench's official runner.
 
@@ -247,12 +245,18 @@ def _truncate_for_log(text: str) -> str:
     return text[:limit]
 
 
-@dataclass
 class _JsonlGzipLogger:
-    path: Path
-    fp: Any
-    lines_written: int = 0
-    flush_every: int = 32
+    def __init__(
+        self,
+        path: Path,
+        fp: Any,
+        lines_written: int = 0,
+        flush_every: int = 32,
+    ) -> None:
+        self.path = path
+        self.fp = fp
+        self.lines_written = lines_written
+        self.flush_every = flush_every
 
     def write(self, record: dict[str, Any]) -> None:
         self.fp.write(json.dumps(record, ensure_ascii=False) + "\n")
