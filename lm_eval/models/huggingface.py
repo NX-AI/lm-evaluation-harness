@@ -332,7 +332,8 @@ class HFLM(TemplateLM):
                     self._device = torch.device(f"{accelerator.device}")
                     self.accelerator = accelerator
 
-                    self._rank = self.accelerator.local_process_index
+                    # Use the global rank so request sharding stays unique across nodes.
+                    self._rank = self.accelerator.process_index
                     self._world_size = self.accelerator.num_processes
                 else:
                     # if we aren't launching via accelerate, ditch
