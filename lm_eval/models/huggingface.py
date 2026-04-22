@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -54,6 +56,158 @@ if TYPE_CHECKING:
 
 eval_logger = logging.getLogger(__name__)
 TOKENIZER_INFINITY = 1000000000000000019884624838656
+
+
+def _maybe_register_lm_engine_models(pretrained: str, subfolder: str = "") -> bool:
+    config_dir = Path(pretrained)
+    if subfolder:
+        config_dir = config_dir / subfolder
+
+    config_path = config_dir / "config.json"
+    if not config_path.is_file():
+        return False
+
+    try:
+        model_type = json.loads(config_path.read_text()).get("model_type")
+    except Exception:
+        return False
+
+    if not model_type:
+        return False
+
+    try:
+        transformers.AutoConfig.for_model(model_type)
+        return True
+    except Exception:
+        pass
+
+    repo_candidates = []
+    lm_engine_dir = os.environ.get("LM_ENGINE_DIR")
+    if lm_engine_dir:
+        repo_candidates.append(Path(lm_engine_dir))
+
+    try:
+        repo_candidates.append(Path(__file__).resolve().parents[3] / "lm-engine")
+    except Exception:
+        pass
+
+    for repo_dir in repo_candidates:
+        if not repo_dir.is_dir():
+            continue
+
+        repo_str = str(repo_dir)
+        if repo_str not in sys.path:
+            sys.path.insert(0, repo_str)
+
+        try:
+            from lm_engine.hf_models.models import (
+                GPTBaseConfig,
+                GPTBaseForCausalLM,
+                GPTBaseModel,
+                GPTCrossLayerConfig,
+                GPTCrossLayerForCausalLM,
+                GPTCrossLayerModel,
+                LadderResidualConfig,
+                LadderResidualForCausalLM,
+                LadderResidualModel,
+                PaLMConfig,
+                PaLMForCausalLM,
+                PaLMModel,
+            )
+        except Exception:
+            continue
+
+        custom_registry = [
+            (GPTBaseConfig, GPTBaseModel, GPTBaseForCausalLM),
+            (GPTCrossLayerConfig, GPTCrossLayerModel, GPTCrossLayerForCausalLM),
+            (LadderResidualConfig, LadderResidualModel, LadderResidualForCausalLM),
+            (PaLMConfig, PaLMModel, PaLMForCausalLM),
+        ]
+
+        for config_class, auto_model_class, auto_model_for_causal_lm_class in custom_registry:
+            try:
+                transformers.AutoConfig.register(config_class.model_type, config_class, exist_ok=True)
+            except TypeError:
+                try:
+                    transformers.AutoConfig.register(config_class.model_type, config_class)
+                except ValueError:
+                    pass
+            except ValueError:
+                pass
+
+            try:
+                transformers.AutoModel.register(config_class, auto_model_class, exist_ok=True)
+            except TypeError:
+                try:
+                    transformers.AutoModel.register(config_class, auto_model_class)
+                except ValueError:
+                    pass
+            except ValueError:
+                pass
+
+            try:
+                transformers.AutoModelForCausalLM.register(
+                    config_class, auto_model_for_causal_lm_class, exist_ok=True
+                )
+            except TypeError:
+                try:
+                    transformers.AutoModelForCausalLM.register(config_class, auto_model_for_causal_lm_class)
+                except ValueError:
+                    pass
+            except ValueError:
+                pass
+
+        try:
+            transformers.AutoConfig.for_model(model_type)
+            return True
+        except Exception:
+            continue
+
+    return False
+
+
+def _get_lm_engine_custom_classes(model_type: str):
+    repo_candidates = []
+    lm_engine_dir = os.environ.get("LM_ENGINE_DIR")
+    if lm_engine_dir:
+        repo_candidates.append(Path(lm_engine_dir))
+
+    try:
+        repo_candidates.append(Path(__file__).resolve().parents[3] / "lm-engine")
+    except Exception:
+        pass
+
+    for repo_dir in repo_candidates:
+        if not repo_dir.is_dir():
+            continue
+
+        repo_str = str(repo_dir)
+        if repo_str not in sys.path:
+            sys.path.insert(0, repo_str)
+
+        try:
+            from lm_engine.hf_models.models import (
+                GPTBaseConfig,
+                GPTBaseForCausalLM,
+                GPTCrossLayerConfig,
+                GPTCrossLayerForCausalLM,
+                LadderResidualConfig,
+                LadderResidualForCausalLM,
+                PaLMConfig,
+                PaLMForCausalLM,
+            )
+        except Exception:
+            continue
+
+        class_map = {
+            GPTBaseConfig.model_type: (GPTBaseConfig, GPTBaseForCausalLM),
+            GPTCrossLayerConfig.model_type: (GPTCrossLayerConfig, GPTCrossLayerForCausalLM),
+            LadderResidualConfig.model_type: (LadderResidualConfig, LadderResidualForCausalLM),
+            PaLMConfig.model_type: (PaLMConfig, PaLMForCausalLM),
+        }
+        return class_map.get(model_type)
+
+    return None
 
 
 @register_model("hf-auto", "hf", "huggingface")
@@ -590,14 +744,35 @@ class HFLM(TemplateLM):
         subfolder: str = "",
     ) -> None:
         """Return the model config for HuggingFace models."""
-        self._config = transformers.AutoConfig.from_pretrained(
-            pretrained,
-            revision=revision,
-            trust_remote_code=trust_remote_code,
-            gguf_file=gguf_file,
-            cache_dir=self.cache_dir,
-            subfolder=subfolder,
-        )
+        try:
+            self._config = transformers.AutoConfig.from_pretrained(
+                pretrained,
+                revision=revision,
+                trust_remote_code=trust_remote_code,
+                gguf_file=gguf_file,
+                cache_dir=self.cache_dir,
+                subfolder=subfolder,
+            )
+        except ValueError:
+            config_dir = Path(pretrained)
+            if subfolder:
+                config_dir = config_dir / subfolder
+            config_path = config_dir / "config.json"
+            if not config_path.is_file():
+                raise
+            model_type = json.loads(config_path.read_text()).get("model_type")
+            custom_classes = _get_lm_engine_custom_classes(model_type)
+            if custom_classes is None:
+                raise
+            config_class, _ = custom_classes
+            self._config = config_class.from_pretrained(
+                pretrained,
+                revision=revision,
+                trust_remote_code=trust_remote_code,
+                gguf_file=gguf_file,
+                cache_dir=self.cache_dir,
+                subfolder=subfolder,
+            )
 
     def _create_model(
         self,
@@ -655,17 +830,36 @@ class HFLM(TemplateLM):
                 if compute_dtype := model_kwargs.get("bnb_4bit_compute_dtype"):
                     model_kwargs["bnb_4bit_compute_dtype"] = get_dtype(compute_dtype)
 
-            self._model = self.AUTO_MODEL_CLASS.from_pretrained(
-                pretrained,
-                revision=revision,
-                dtype=get_dtype(dtype),
-                trust_remote_code=trust_remote_code,
-                gguf_file=gguf_file,
-                quantization_config=quantization_config,
-                cache_dir=self.cache_dir,
-                subfolder=subfolder,
-                **model_kwargs,
-            )
+            try:
+                self._model = self.AUTO_MODEL_CLASS.from_pretrained(
+                    pretrained,
+                    revision=revision,
+                    dtype=get_dtype(dtype),
+                    trust_remote_code=trust_remote_code,
+                    gguf_file=gguf_file,
+                    quantization_config=quantization_config,
+                    cache_dir=self.cache_dir,
+                    subfolder=subfolder,
+                    **model_kwargs,
+                )
+            except ValueError:
+                custom_classes = _get_lm_engine_custom_classes(
+                    getattr(self._config, "model_type", None)
+                )
+                if custom_classes is None:
+                    raise
+                _, custom_model_class = custom_classes
+                self._model = custom_model_class.from_pretrained(
+                    pretrained,
+                    revision=revision,
+                    dtype=get_dtype(dtype),
+                    trust_remote_code=trust_remote_code,
+                    gguf_file=gguf_file,
+                    quantization_config=quantization_config,
+                    cache_dir=self.cache_dir,
+                    subfolder=subfolder,
+                    **model_kwargs,
+                )
         else:
             if autogptq and gptqmodel:
                 raise ValueError(
