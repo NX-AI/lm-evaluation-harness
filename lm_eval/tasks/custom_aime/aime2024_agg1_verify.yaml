@@ -1,0 +1,63 @@
+tag:
+  - math_word_problems
+
+task: custom_aime2024_agg1_verify
+
+dataset_path: simplescaling/aime24_nofigures
+dataset_name: default
+
+# Normalize dataset columns to {problem, solution, answer}
+process_docs: !function aime_verutils.process_docs
+
+output_type: generate_until
+test_split: train
+
+doc_to_text: !function aime_verutils.doc_to_text
+doc_to_target: "{{answer}}"
+
+process_results: !function aime_verutils.process_results
+
+repeats: 1
+
+generation_kwargs:
+  until:
+    - "</s>"
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  do_sample: true
+  temperature: 0.6
+  max_gen_toks: 4096
+
+filter_list:
+  - name: "all"
+    filter:
+      - function: "take_first_k"
+        k: 1
+
+metric_list:
+  - metric: avg_score
+    aggregation: mean
+    higher_is_better: true
+  - metric: no_answer_rate
+    aggregation: mean
+    higher_is_better: false
+  - metric: no_answer_count
+    aggregation: sum
+    higher_is_better: false
+  - metric: num_generations
+    aggregation: sum
+    higher_is_better: false
+  - metric: extracted_answers
+    aggregation: bypass
+    higher_is_better: false
+  - metric: pass@1
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@1
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 0.1
+  scoring: math_verify
+  log_filtered_resps: false
