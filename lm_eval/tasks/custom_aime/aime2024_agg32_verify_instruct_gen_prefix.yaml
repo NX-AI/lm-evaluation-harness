@@ -1,0 +1,4 @@
+include: aime2024_agg32_verify_instruct.yaml
+task: custom_aime2024_agg32_verify_instruct_gen_prefix
+# Prefill assistant turn
+gen_prefix: "Final answer: "

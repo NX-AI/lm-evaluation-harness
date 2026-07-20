@@ -1,0 +1,13 @@
+include: qasper_e.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_qasper_e_cot
+doc_to_text: "You are given a scientific article and a question. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\". <text> should be a single phrase or sentence if possible. If the question cannot be answered based on the information in the article, use \"unanswerable\". If the question is a yes/no question, use \"yes\", \"no\", or \"unanswerable\".\n\nArticle: {{context}}\n\nQuestion: {{question}}\n\nResponse:"
+process_results: !function utils_cot.get_qa_f1_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

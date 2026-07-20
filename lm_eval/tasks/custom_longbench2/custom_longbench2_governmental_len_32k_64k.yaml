@@ -1,0 +1,8 @@
+include: _custom_longbench2_base.yaml
+tag:
+  - custom_longbench2_bucket_tasks
+task: custom_longbench2_governmental_len_32k_64k
+task_alias: "LongBench v2 Governmental (32k-64k tokens)"
+dataset_kwargs:
+  sub_domain: "Governmental"
+  token_length_bucket: 32k_64k

@@ -1,0 +1,14 @@
+group: custom_longbench2_financial
+group_alias: "LongBench v2 Financial"
+task:
+  - custom_longbench2_financial_len_0_16k
+  - custom_longbench2_financial_len_16k_32k
+  - custom_longbench2_financial_len_32k_64k
+  - custom_longbench2_financial_len_64k_128k
+  - custom_longbench2_financial_len_128k_512k
+  - custom_longbench2_financial_len_512k_1024k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

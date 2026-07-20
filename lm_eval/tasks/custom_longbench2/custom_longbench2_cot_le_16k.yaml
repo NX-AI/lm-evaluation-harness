@@ -1,0 +1,15 @@
+group: custom_longbench2_cot_le_16k
+group_alias: "LongBench v2 CoT <= 16k tokens"
+task:
+  - custom_longbench2_cot_academic_len_0_16k
+  - custom_longbench2_cot_financial_len_0_16k
+  - custom_longbench2_cot_governmental_len_0_16k
+  - custom_longbench2_cot_legal_len_0_16k
+  - custom_longbench2_cot_literary_len_0_16k
+  - custom_longbench2_cot_multi_news_len_0_16k
+  - custom_longbench2_cot_user_guide_qa_len_0_16k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

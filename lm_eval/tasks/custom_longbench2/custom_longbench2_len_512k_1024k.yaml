@@ -1,0 +1,17 @@
+group: custom_longbench2_len_512k_1024k
+group_alias: "LongBench v2 512k-1024k tokens"
+task:
+  - custom_longbench2_academic_len_512k_1024k
+  - custom_longbench2_code_repo_qa_len_512k_1024k
+  - custom_longbench2_financial_len_512k_1024k
+  - custom_longbench2_governmental_len_512k_1024k
+  - custom_longbench2_knowledge_graph_reasoning_len_512k_1024k
+  - custom_longbench2_literary_len_512k_1024k
+  - custom_longbench2_new_language_translation_len_512k_1024k
+  - custom_longbench2_table_qa_len_512k_1024k
+  - custom_longbench2_user_guide_qa_len_512k_1024k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

@@ -1,0 +1,73 @@
+group: custom_longbench2_bucketed
+group_alias: "LongBench v2 bucketed by Qwen token length"
+task:
+  - custom_longbench2_academic_len_0_16k
+  - custom_longbench2_academic_len_16k_32k
+  - custom_longbench2_academic_len_32k_64k
+  - custom_longbench2_academic_len_64k_128k
+  - custom_longbench2_academic_len_128k_512k
+  - custom_longbench2_academic_len_512k_1024k
+  - custom_longbench2_agent_history_qa_len_16k_32k
+  - custom_longbench2_agent_history_qa_len_32k_64k
+  - custom_longbench2_code_repo_qa_len_16k_32k
+  - custom_longbench2_code_repo_qa_len_32k_64k
+  - custom_longbench2_code_repo_qa_len_64k_128k
+  - custom_longbench2_code_repo_qa_len_128k_512k
+  - custom_longbench2_code_repo_qa_len_512k_1024k
+  - custom_longbench2_detective_len_16k_32k
+  - custom_longbench2_detective_len_64k_128k
+  - custom_longbench2_detective_len_128k_512k
+  - custom_longbench2_dialogue_history_qa_len_64k_128k
+  - custom_longbench2_event_ordering_len_32k_64k
+  - custom_longbench2_event_ordering_len_64k_128k
+  - custom_longbench2_event_ordering_len_128k_512k
+  - custom_longbench2_financial_len_0_16k
+  - custom_longbench2_financial_len_16k_32k
+  - custom_longbench2_financial_len_32k_64k
+  - custom_longbench2_financial_len_64k_128k
+  - custom_longbench2_financial_len_128k_512k
+  - custom_longbench2_financial_len_512k_1024k
+  - custom_longbench2_governmental_len_0_16k
+  - custom_longbench2_governmental_len_16k_32k
+  - custom_longbench2_governmental_len_32k_64k
+  - custom_longbench2_governmental_len_64k_128k
+  - custom_longbench2_governmental_len_128k_512k
+  - custom_longbench2_governmental_len_512k_1024k
+  - custom_longbench2_knowledge_graph_reasoning_len_128k_512k
+  - custom_longbench2_knowledge_graph_reasoning_len_512k_1024k
+  - custom_longbench2_legal_len_0_16k
+  - custom_longbench2_legal_len_16k_32k
+  - custom_longbench2_legal_len_32k_64k
+  - custom_longbench2_legal_len_64k_128k
+  - custom_longbench2_legal_len_128k_512k
+  - custom_longbench2_literary_len_0_16k
+  - custom_longbench2_literary_len_16k_32k
+  - custom_longbench2_literary_len_32k_64k
+  - custom_longbench2_literary_len_64k_128k
+  - custom_longbench2_literary_len_128k_512k
+  - custom_longbench2_literary_len_512k_1024k
+  - custom_longbench2_many_shot_learning_len_64k_128k
+  - custom_longbench2_many_shot_learning_len_128k_512k
+  - custom_longbench2_multi_news_len_0_16k
+  - custom_longbench2_multi_news_len_16k_32k
+  - custom_longbench2_multi_news_len_32k_64k
+  - custom_longbench2_multi_news_len_64k_128k
+  - custom_longbench2_multi_news_len_128k_512k
+  - custom_longbench2_new_language_translation_len_128k_512k
+  - custom_longbench2_new_language_translation_len_512k_1024k
+  - custom_longbench2_table_qa_len_16k_32k
+  - custom_longbench2_table_qa_len_32k_64k
+  - custom_longbench2_table_qa_len_64k_128k
+  - custom_longbench2_table_qa_len_128k_512k
+  - custom_longbench2_table_qa_len_512k_1024k
+  - custom_longbench2_user_guide_qa_len_0_16k
+  - custom_longbench2_user_guide_qa_len_16k_32k
+  - custom_longbench2_user_guide_qa_len_32k_64k
+  - custom_longbench2_user_guide_qa_len_64k_128k
+  - custom_longbench2_user_guide_qa_len_128k_512k
+  - custom_longbench2_user_guide_qa_len_512k_1024k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

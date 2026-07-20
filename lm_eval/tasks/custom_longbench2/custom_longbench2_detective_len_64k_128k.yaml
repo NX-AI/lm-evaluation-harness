@@ -1,0 +1,8 @@
+include: _custom_longbench2_base.yaml
+tag:
+  - custom_longbench2_bucket_tasks
+task: custom_longbench2_detective_len_64k_128k
+task_alias: "LongBench v2 Detective (64k-128k tokens)"
+dataset_kwargs:
+  sub_domain: "Detective"
+  token_length_bucket: 64k_128k

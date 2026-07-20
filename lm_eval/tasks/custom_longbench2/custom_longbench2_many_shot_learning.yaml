@@ -1,0 +1,10 @@
+group: custom_longbench2_many_shot_learning
+group_alias: "LongBench v2 Many-shot learning"
+task:
+  - custom_longbench2_many_shot_learning_len_64k_128k
+  - custom_longbench2_many_shot_learning_len_128k_512k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

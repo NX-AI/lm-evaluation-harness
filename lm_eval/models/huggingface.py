@@ -103,6 +103,9 @@ class HFLM(TemplateLM):
         autogptq: bool | str | None = False,
         gptqmodel: bool | None = False,
         gguf_file: str | None = None,
+        # custom args
+        pretrained_model_name_or_path: str | None = None,
+        cache_dir: str | None = None,
         # end token for thinking, either the string or int token id.
         # splits to get response after this token (if provided).
         think_end_token: str | int | None = None,
@@ -111,6 +114,11 @@ class HFLM(TemplateLM):
         **kwargs,
     ) -> None:
         super().__init__()
+
+        if pretrained_model_name_or_path is not None:
+            pretrained = pretrained_model_name_or_path
+        self.cache_dir = cache_dir
+
         # optionally: take in an already-initialized transformers.PreTrainedModel
         if not isinstance(pretrained, str):
             eval_logger.warning(
@@ -586,6 +594,7 @@ class HFLM(TemplateLM):
             revision=revision,
             trust_remote_code=trust_remote_code,
             gguf_file=gguf_file,
+            cache_dir=self.cache_dir,
             subfolder=subfolder,
         )
 
@@ -652,6 +661,7 @@ class HFLM(TemplateLM):
                 trust_remote_code=trust_remote_code,
                 gguf_file=gguf_file,
                 quantization_config=quantization_config,
+                cache_dir=self.cache_dir,
                 subfolder=subfolder,
                 **model_kwargs,
             )
@@ -772,6 +782,8 @@ class HFLM(TemplateLM):
             "revision": revision,
             "trust_remote_code": trust_remote_code,
         }
+        if self.cache_dir is not None:
+            kwargs["cache_dir"] = self.cache_dir
 
         # gguf format embeds tokenizer and is not compatible with hf tokenizer `use_fast` param
         if not tokenizer and gguf_file is not None:
@@ -812,12 +824,26 @@ class HFLM(TemplateLM):
 
     def _detect_batch_size(self, requests: Sequence | None = None, pos: int = 0):
         if requests:
-            _, context_enc, continuation_enc = requests[pos]
-            max_length = len(
-                (context_enc + continuation_enc)[-(self.max_length + 1) :][:-1]
-            )
-            max_context_enc = len(context_enc[-(self.max_length + 1) :])
-            max_cont_enc = len(continuation_enc[-(self.max_length + 1) :])
+            if len(requests[pos]) == 2:
+                # Generation requests are (context, gen_kwargs) and don't include pre-encoded
+                # (context, continuation) tokens like loglikelihood requests.
+                context, gen_kwargs = requests[pos]
+                max_cont_enc = (
+                    self.max_gen_toks
+                    if "max_gen_toks" not in gen_kwargs
+                    else gen_kwargs["max_gen_toks"]
+                )
+                max_ctx_len = self.max_length - max_cont_enc
+                context_enc = self.tok_encode(context, left_truncate_len=max_ctx_len)
+                max_context_enc = len(context_enc)
+                max_length = max_context_enc + max_cont_enc
+            else:
+                _, context_enc, continuation_enc = requests[pos]
+                max_length = len(
+                    (context_enc + continuation_enc)[-(self.max_length + 1) :][:-1]
+                )
+                max_context_enc = len(context_enc[-(self.max_length + 1) :])
+                max_cont_enc = len(continuation_enc[-(self.max_length + 1) :])
         else:
             max_length = self.max_length
             max_context_enc = max_length
@@ -852,7 +878,7 @@ class HFLM(TemplateLM):
 
         try:
             batch_size = forward_batch()
-        except RuntimeError as e:
+        except Exception as e:
             if "No executable batch size found" in str(e):
                 batch_size = 1
             else:
@@ -971,7 +997,6 @@ class HFLM(TemplateLM):
         ):
             if attn_mask is not None or labels is not None:
                 assert attn_mask is not None and labels is not None
-                assert transformers.AutoModelForSeq2SeqLM == self.AUTO_MODEL_CLASS
                 return self.model(
                     input_ids=inps, attention_mask=attn_mask, labels=labels
                 ).logits
@@ -1047,12 +1072,13 @@ class HFLM(TemplateLM):
         self, requests: list[Instance], disable_tqdm: bool = False
     ) -> list[float]:
         adaptive_batch_size = None
-        if self.batch_size == "auto":
-            # using rolling window with maximum context
-            print("Passed argument batch_size = auto. Detecting largest batch size")
-            batch_size = self._detect_batch_size()
-            print(f"Determined Largest batch size: {batch_size}")
-            adaptive_batch_size = batch_size
+        # Commented since this is suboptimal, does not consider seqlens of requests
+        # if self.batch_size == "auto":
+        #     # using rolling window with maximum context
+        #     print("Passed argument batch_size = auto. Detecting largest batch size")
+        #     batch_size = self._detect_batch_size()
+        #     print(f"Determined Largest batch size: {batch_size}")
+        #     adaptive_batch_size = batch_size
 
         # First, collect all windows from all requests
         all_windows = []  # List of (request_idx, window) tuples

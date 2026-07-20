@@ -1,0 +1,60 @@
+include: hmmt_202502_agg32_verify.yaml
+
+tag:
+  - math_word_problems
+  - instruct_math
+  - math_verify
+
+task: custom_hmmt_202502_agg32_verify_instruct
+
+doc_to_text: !function hmmt_verutils.doc_to_text_instruct_202502
+doc_to_target: "{{answer}}"
+
+process_results: !function hmmt_verutils.process_results
+
+metric_list:
+  - metric: avg_score
+    aggregation: mean
+    higher_is_better: true
+  - metric: no_answer_rate
+    aggregation: mean
+    higher_is_better: false
+  - metric: no_answer_count
+    aggregation: sum
+    higher_is_better: false
+  - metric: num_generations
+    aggregation: sum
+    higher_is_better: false
+  - metric: extracted_answers
+    aggregation: bypass
+    higher_is_better: false
+  - metric: pass@1
+    aggregation: mean
+    higher_is_better: true
+  - metric: pass@2
+    aggregation: mean
+    higher_is_better: true
+  - metric: pass@4
+    aggregation: mean
+    higher_is_better: true
+  - metric: pass@8
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@1
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@2
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@4
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@8
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 0.1
+  scoring: math_verify
+  prompt_type: instruct
+  log_filtered_resps: false

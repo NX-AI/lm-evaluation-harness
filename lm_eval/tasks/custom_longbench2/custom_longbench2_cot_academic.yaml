@@ -1,0 +1,14 @@
+group: custom_longbench2_cot_academic
+group_alias: "LongBench v2 CoT Academic"
+task:
+  - custom_longbench2_cot_academic_len_0_16k
+  - custom_longbench2_cot_academic_len_16k_32k
+  - custom_longbench2_cot_academic_len_32k_64k
+  - custom_longbench2_cot_academic_len_64k_128k
+  - custom_longbench2_cot_academic_len_128k_512k
+  - custom_longbench2_cot_academic_len_512k_1024k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

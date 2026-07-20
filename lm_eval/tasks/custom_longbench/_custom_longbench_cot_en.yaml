@@ -1,0 +1,37 @@
+group: custom_longbench_cot_en
+group_alias: "LongBench v1 (Generative, CoT, English only)"
+task:
+  - custom_longbench_2wikimqa_cot
+  - custom_longbench_2wikimqa_e_cot
+  - custom_longbench_gov_report_cot
+  - custom_longbench_gov_report_e_cot
+  - custom_longbench_hotpotqa_cot
+  - custom_longbench_hotpotqa_e_cot
+  - custom_longbench_lcc_cot
+  - custom_longbench_lcc_e_cot
+  - custom_longbench_multi_news_cot
+  - custom_longbench_multi_news_e_cot
+  - custom_longbench_multifieldqa_en_cot
+  - custom_longbench_multifieldqa_en_e_cot
+  - custom_longbench_musique_cot
+  - custom_longbench_narrativeqa_cot
+  - custom_longbench_passage_count_cot
+  - custom_longbench_passage_count_e_cot
+  - custom_longbench_passage_retrieval_en_cot
+  - custom_longbench_passage_retrieval_en_e_cot
+  - custom_longbench_qasper_cot
+  - custom_longbench_qasper_e_cot
+  - custom_longbench_qmsum_cot
+  - custom_longbench_repobench-p_cot
+  - custom_longbench_repobench-p_e_cot
+  - custom_longbench_samsum_cot
+  - custom_longbench_samsum_e_cot
+  - custom_longbench_trec_cot
+  - custom_longbench_trec_e_cot
+  - custom_longbench_triviaqa_cot
+  - custom_longbench_triviaqa_e_cot
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

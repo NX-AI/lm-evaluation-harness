@@ -1,0 +1,8 @@
+include: aime2024_agg4_verify_instruct.yaml
+task: custom_aime2024_agg4_verify_instruct_gen_prefix_hack
+# Prefill assistant turn
+gen_prefix: |-
+  <think>
+
+  </think>
+  <think>

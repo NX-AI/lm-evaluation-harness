@@ -1,0 +1,13 @@
+include: triviaqa.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_triviaqa_cot
+doc_to_text: "Answer the question based on the given passage. Think step by step in a concise way. Then give the final answer as \"Answer: <text>\", where <text> contains only the answer and no extra explanation.\n\nThe following are some examples.\n\n{{context}}\n{{question}}\n\nResponse:"
+process_results: !function utils_cot.get_qa_f1_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

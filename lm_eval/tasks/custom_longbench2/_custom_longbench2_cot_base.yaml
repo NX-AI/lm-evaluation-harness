@@ -1,0 +1,23 @@
+custom_dataset: !function utils.load_longbench2_dataset
+dataset_kwargs:
+  repo_id: zai-org/LongBench-v2
+  split: train
+  prompt_style: cot
+dataset_path: zai-org/LongBench-v2
+test_split: train
+output_type: generate_until
+num_fewshot: 0
+doc_to_text: !function utils.doc_to_text_cot
+doc_to_target: !function utils.doc_to_target
+process_results: !function utils.process_results
+generation_kwargs:
+  max_gen_toks: 512
+  temperature: 0
+  do_sample: false
+  until: []
+metric_list:
+  - metric: acc
+    aggregation: mean
+    higher_is_better: true
+metadata:
+  version: 1.0

@@ -1,0 +1,13 @@
+include: passage_retrieval_zh.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_passage_retrieval_zh_cot
+doc_to_text: "以下是若干段落文字，以及其中一个段落的摘要。请确定给定的摘要出自哪一段。请简要地逐步思考，然后以 \"Answer: <text>\" 给出最终答案，其中 <text> 必须是 \"段落1\"、\"段落2\" 等格式。\n\n{{context}}\n\n下面是一个摘要\n\n{{question}}\n\n回答："
+process_results: !function utils_cot.get_retrieval_zh_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

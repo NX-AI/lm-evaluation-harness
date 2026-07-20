@@ -1,0 +1,21 @@
+group: custom_longbench2_len_64k_128k
+group_alias: "LongBench v2 64k-128k tokens"
+task:
+  - custom_longbench2_academic_len_64k_128k
+  - custom_longbench2_code_repo_qa_len_64k_128k
+  - custom_longbench2_detective_len_64k_128k
+  - custom_longbench2_dialogue_history_qa_len_64k_128k
+  - custom_longbench2_event_ordering_len_64k_128k
+  - custom_longbench2_financial_len_64k_128k
+  - custom_longbench2_governmental_len_64k_128k
+  - custom_longbench2_legal_len_64k_128k
+  - custom_longbench2_literary_len_64k_128k
+  - custom_longbench2_many_shot_learning_len_64k_128k
+  - custom_longbench2_multi_news_len_64k_128k
+  - custom_longbench2_table_qa_len_64k_128k
+  - custom_longbench2_user_guide_qa_len_64k_128k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0

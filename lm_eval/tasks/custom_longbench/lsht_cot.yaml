@@ -1,0 +1,13 @@
+include: lsht.yaml
+
+tag:
+  - custom_longbench_cot_tasks
+task: custom_longbench_lsht_cot
+doc_to_text: "请判断给定新闻的类别。请简要地逐步思考，然后以 \"Answer: <text>\" 给出最终答案，其中 <text> 只包含新闻类别标签。\n\n下面是一些例子。\n\n{{context}}\n{{question}}\n\n回答："
+process_results: !function utils_cot.get_classification_with_score
+filter_list:
+  - name: none
+    filter:
+      - function: custom
+        filter_fn: !function utils_cot.filter_responses
+      - function: take_first

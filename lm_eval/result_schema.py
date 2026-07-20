@@ -188,10 +188,12 @@ class SampleResult(TypedDict, extra_items=float):
     Generation: ``list[list[str]]`` — requests × repeats × generated text.
     Multiple-choice: ``list[list[list[str]]]`` — requests × repeats × ``[log_prob, is_greedy]``."""
 
-    filtered_resps: list[str] | list[list[str]]
+    filtered_resps: NotRequired[list[str] | list[list[str]]]
     """Responses after filter application.  Per-request.
     Generation: ``list[str]``.
-    Multiple-choice: ``list[list[str]]`` — per-choice ``[log_prob, is_greedy]``."""
+    Multiple-choice: ``list[list[str]]`` — per-choice ``[log_prob, is_greedy]``.
+
+    This field may be omitted when tasks set ``metadata.log_filtered_resps: false``."""
 
     filter: str
     """Name of the filter applied (e.g. ``"none"``, ``"strict-match"``)."""

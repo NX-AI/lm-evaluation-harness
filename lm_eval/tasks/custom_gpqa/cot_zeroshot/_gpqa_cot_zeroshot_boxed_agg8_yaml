@@ -1,0 +1,76 @@
+tag:
+  - gpqa
+task: gpqa_main_cot_zeroshot_boxed_agg8
+dataset_path: Idavidrein/gpqa
+dataset_name: gpqa_main
+process_docs: !function utils_boxed.process_docs
+output_type: generate_until
+training_split: train
+validation_split: train
+test_split: null
+
+doc_to_text: |
+  Given the following question and four candidate answers (A, B, C and D), choose the best answer.
+
+  Question: {{Question}}
+  Choices:
+  (A) {{choice1}}
+  (B) {{choice2}}
+  (C) {{choice3}}
+  (D) {{choice4}}
+
+  Think step by step but keep the reasoning concise. On the final line, output only the best choice as \boxed{<LETTER>} where <LETTER> is one of A, B, C, or D.
+
+doc_to_target: answer
+
+process_results: !function utils_boxed.process_results
+
+repeats: 8
+
+generation_kwargs:
+  until:
+    - "</s>"
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  do_sample: true
+  temperature: 0.6
+  max_gen_toks: 4096
+
+filter_list:
+  - name: "all"
+    filter:
+      - function: "take_first_k"
+        k: 8
+
+num_fewshot: 0
+metric_list:
+  - metric: avg_score
+    aggregation: mean
+    higher_is_better: true
+  - metric: no_answer_rate
+    aggregation: mean
+    higher_is_better: false
+  - metric: no_answer_count
+    aggregation: sum
+    higher_is_better: false
+  - metric: num_generations
+    aggregation: sum
+    higher_is_better: false
+  - metric: extracted_answers
+    aggregation: bypass
+    higher_is_better: false
+  - metric: majority@1
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@2
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@4
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority@8
+    aggregation: mean
+    higher_is_better: true
+
+metadata:
+  version: 1.0

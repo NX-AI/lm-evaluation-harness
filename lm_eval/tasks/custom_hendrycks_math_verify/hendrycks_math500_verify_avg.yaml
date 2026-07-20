@@ -1,0 +1,29 @@
+include: hendrycks_math_verify_algebra.yaml
+task: custom_hendrycks_math500_verify_avg
+dataset_name: default
+dataset_path: HuggingFaceH4/MATH-500
+training_split: null
+test_split: test
+
+# Average over multiple stochastic generations per question
+process_results: !function utils.process_results_avg
+
+# Default number of rollouts; must match filter k
+repeats: 8
+
+filter_list:
+  - name: "keep_rollouts"
+    filter:
+      - function: "take_first_k"
+        k: 8
+
+generation_kwargs:
+  until:
+    - "Problem:"
+  do_sample: true
+  temperature: 0.7
+
+metadata:
+  version: 1.0
+  num_repeats: 8
+

@@ -1,0 +1,7 @@
+include: _custom_mrcr_base
+tag:
+  - custom_mrcr_length_tasks
+task: custom_mrcr_len_16k_32k
+task_alias: "MRCR 16k-32k tokens"
+dataset_kwargs:
+  length_bin: 16k_32k

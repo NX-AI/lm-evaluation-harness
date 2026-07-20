@@ -1,0 +1,12 @@
+group: custom_longbench_multi
+group_alias: "Multi-Document QA"
+task:
+  - custom_longbench_hotpotqa
+  - custom_longbench_2wikimqa
+  - custom_longbench_musique
+  - custom_longbench_dureader
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: False
+metadata:
+  version: 0.0

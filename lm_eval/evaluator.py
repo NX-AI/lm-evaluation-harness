@@ -626,6 +626,8 @@ def evaluate(
                     doc, [req.filtered_resps[filter_key] for req in requests]
                 )
                 if log_samples:
+                    metadata = getattr(task.config, "metadata", None) or {}
+                    log_filtered_resps = metadata.get("log_filtered_resps", True)
                     target = task.doc_to_target(doc)
                     example = {
                         "doc_id": doc_id_true,
@@ -633,9 +635,6 @@ def evaluate(
                         "target": target,
                         "arguments": [req.args for req in requests],
                         "resps": [req.resps for req in requests],
-                        "filtered_resps": [
-                            req.filtered_resps[filter_key] for req in requests
-                        ],
                         "filter": filter_key,
                         "metrics": list(metrics.keys()),
                         "doc_hash": hash_string(
@@ -649,6 +648,10 @@ def evaluate(
                         "prompt_hash": hash_string(requests[0].arguments[0]),
                         "target_hash": hash_string(str(target)),
                     }
+                    if log_filtered_resps:
+                        example["filtered_resps"] = [
+                            req.filtered_resps[filter_key] for req in requests
+                        ]
                     example.update(metrics)
                     acc["logged_samples"].append(example)
                 for metric, value in metrics.items():

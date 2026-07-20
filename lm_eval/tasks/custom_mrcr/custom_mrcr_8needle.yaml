@@ -1,0 +1,7 @@
+include: _custom_mrcr_base
+tag:
+  - custom_mrcr_tasks
+task: custom_mrcr_8needle
+task_alias: "MRCR 8-needle"
+dataset_kwargs:
+  n_needles: 8

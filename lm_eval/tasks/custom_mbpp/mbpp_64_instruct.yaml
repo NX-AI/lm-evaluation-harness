@@ -1,0 +1,8 @@
+include: mbpp_instruct.yaml
+task: custom_mbpp_64_instruct
+repeats: 64
+generation_kwargs:
+  max_gen_toks: 1024
+  temperature: 0.2
+  until: ["```"]
+  do_sample: true

@@ -1,0 +1,8 @@
+include: _custom_longbench2_cot_base.yaml
+tag:
+  - custom_longbench2_cot_bucket_tasks
+task: custom_longbench2_cot_table_qa_len_16k_32k
+task_alias: "LongBench v2 CoT Table QA (16k-32k tokens)"
+dataset_kwargs:
+  sub_domain: "Table QA"
+  token_length_bucket: 16k_32k

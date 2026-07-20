@@ -1,0 +1,16 @@
+group: custom_mrcr_by_length
+group_alias: "MRCR By Length"
+task:
+  - custom_mrcr_len_4k_8k
+  - custom_mrcr_len_8k_16k
+  - custom_mrcr_len_16k_32k
+  - custom_mrcr_len_32k_64k
+  - custom_mrcr_len_64k_128k
+  - custom_mrcr_len_128k_256k
+  - custom_mrcr_len_256k_512k
+  - custom_mrcr_len_512k_1024k
+aggregate_metric_list:
+  - metric: score
+    weight_by_size: true
+metadata:
+  version: 1.0

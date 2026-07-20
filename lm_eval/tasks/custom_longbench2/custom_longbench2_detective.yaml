@@ -1,0 +1,11 @@
+group: custom_longbench2_detective
+group_alias: "LongBench v2 Detective"
+task:
+  - custom_longbench2_detective_len_16k_32k
+  - custom_longbench2_detective_len_64k_128k
+  - custom_longbench2_detective_len_128k_512k
+aggregate_metric_list:
+  - metric: acc
+    weight_by_size: true
+metadata:
+  version: 1.0
