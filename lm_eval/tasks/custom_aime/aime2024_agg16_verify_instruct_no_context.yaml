@@ -1,0 +1,3 @@
+include: aime2024_agg16_verify_instruct.yaml
+task: custom_aime2024_agg16_verify_instruct_no_context
+doc_to_text: !function aime_verutils.doc_to_text_instruct_no_context

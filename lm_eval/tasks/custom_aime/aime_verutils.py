@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import concurrent.futures
 import logging
 import math
+import os
 import re
 from collections import Counter
 from typing import Any, Dict, List, Optional
@@ -67,7 +69,16 @@ def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
             out_doc["few_shot"] = True
         return out_doc
 
-    return dataset.map(_process_doc)
+    dataset = dataset.map(_process_doc)
+
+    # Scatter support: MATH_SCATTER_SAMPLE_INDICES=0,1,4,7 restricts to those doc indices.
+    scatter_env = os.environ.get("MATH_SCATTER_SAMPLE_INDICES", "").strip()
+    if scatter_env:
+        indices = [int(x) for x in scatter_env.split(",") if x.strip()]
+        LOG.info("MATH_SCATTER_SAMPLE_INDICES: selecting %d docs: %s", len(indices), indices)
+        dataset = dataset.select(indices)
+
+    return dataset
 
 
 # NeMo-style sampling metrics (per-instance):
@@ -125,10 +136,14 @@ def math_equal(
     norm_gt_mcq = gt_answer.strip()
     is_mcq = re.fullmatch("|".join(mcq_options), norm_gt_mcq)
 
-    parsed_gt = parse(gt_answer, [StringExtractionConfig(strings=tuple(mcq_options))])
-    parsed_pred = parse(predicted_answer, [StringExtractionConfig(strings=tuple(mcq_options))])
-    if is_mcq and verify(parsed_gt, parsed_pred):
-        return verify(parsed_gt, parsed_pred)
+    # parsing_timeout=None / timeout_seconds=None disables math_verify's
+    # signal.alarm()-based timeout, which only works in the main thread.
+    # process_results runs math_equal in a ThreadPoolExecutor, so the outer
+    # future.result(timeout=...) already enforces the time bound.
+    parsed_gt = parse(gt_answer, [StringExtractionConfig(strings=tuple(mcq_options))], parsing_timeout=None)
+    parsed_pred = parse(predicted_answer, [StringExtractionConfig(strings=tuple(mcq_options))], parsing_timeout=None)
+    if is_mcq and verify(parsed_gt, parsed_pred, timeout_seconds=None):
+        return verify(parsed_gt, parsed_pred, timeout_seconds=None)
 
     # Additional normalization step
     gt_answer = _additional_normalization(gt_answer)
@@ -161,9 +176,10 @@ def math_equal(
     if not re.search(latex_env_search_pattern, current_predicted_answer, re.DOTALL):
         current_predicted_answer = f"${current_predicted_answer}$"
 
-    parsed_gt = parse(current_gt_answer, [LatexExtractionConfig()])
-    parsed_pred = parse(current_predicted_answer, [LatexExtractionConfig()])
+    parsed_gt = parse(current_gt_answer, [LatexExtractionConfig()], parsing_timeout=None)
+    parsed_pred = parse(current_predicted_answer, [LatexExtractionConfig()], parsing_timeout=None)
 
+    kwargs.setdefault("timeout_seconds", None)
     return bool(verify(parsed_gt, parsed_pred, **kwargs))
 
 
@@ -295,11 +311,9 @@ def process_results(
     gt = str(gt)
 
     predicted_answers: List[Optional[str]] = []
-    scores: List[float] = []
 
     for gen in results:
         gen = str(gen)
-
         pred_ans = extract_answer(
             gen,
             extract_from_boxed=extract_from_boxed,
@@ -308,14 +322,47 @@ def process_results(
         )
         predicted_answers.append(pred_ans)
 
-        correct = math_equal(
+    # Use a thread-based timeout so we can interrupt SymPy even when it is stuck
+    # inside C-extension code (signal.alarm cannot do this).
+    # One pool for the entire call; shutdown(wait=False) abandons any threads still
+    # running SymPy so we never block here.
+    _thread_timeout = timeout_seconds if timeout_seconds is not None and timeout_seconds > 0 else None
+    _pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(predicted_answers) or 1)
+    futures = [
+        _pool.submit(
+            math_equal,
             gt,
             pred_ans,
             take_modulo=take_modulo,
             numeric_precision=numeric_precision,
-            timeout_seconds=timeout_seconds,
         )
-        scores.append(1.0 if correct else 0.0)
+        for pred_ans in predicted_answers
+    ]
+
+    scores: List[float] = []
+    try:
+        for pred_ans, _future in zip(predicted_answers, futures):
+            try:
+                correct = _future.result(timeout=_thread_timeout)
+            except concurrent.futures.TimeoutError:
+                LOG.warning(
+                    "math_equal timed out (thread timeout=%ss) for pred_ans=%r gt=%r — treating as incorrect.",
+                    _thread_timeout,
+                    pred_ans,
+                    gt,
+                )
+                correct = False
+            except Exception as exc:
+                LOG.warning(
+                    "math_equal raised %s for pred_ans=%r gt=%r — treating as incorrect.",
+                    exc,
+                    pred_ans,
+                    gt,
+                )
+                correct = False
+            scores.append(1.0 if correct else 0.0)
+    finally:
+        _pool.shutdown(wait=False)
 
     n = len(scores)
     no_answer_count = sum(1 for a in predicted_answers if a is None)
