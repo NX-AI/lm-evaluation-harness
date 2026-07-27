@@ -14,8 +14,11 @@
 
 
 import itertools  # noqa: I001
+import json
+import os
 import random
 from functools import cache
+from pathlib import Path
 
 import datasets
 import requests
@@ -76,7 +79,21 @@ def read_squad(
 def read_hotpotqa(
     url="http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json",
 ) -> tuple[list[dict], list[str]]:
-    data = download_json(url)
+    cache_path = Path(
+        os.environ.get(
+            "RULER_HOTPOTQA_PATH",
+            Path.home()
+            / ".cache"
+            / "lm_eval"
+            / "ruler"
+            / "hotpot_dev_distractor_v1.json",
+        )
+    )
+    if cache_path.is_file():
+        with cache_path.open(encoding="utf-8") as file:
+            data = json.load(file)
+    else:
+        data = download_json(url)
     total_docs = [f"{t}\n{''.join(p)}" for d in data for t, p in d["context"]]
     total_docs = sorted(list(set(total_docs)))
     total_docs_dict = {c: idx for idx, c in enumerate(total_docs)}
