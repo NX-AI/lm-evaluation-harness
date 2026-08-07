@@ -11,6 +11,12 @@ generation_kwargs:
     - "\n[/ANSWER]\n"
     - "\n[/ANSWER]"
 
+filter_list:
+  - name: "all"
+    filter:
+      - function: "take_first_k"
+        k: 64
+
 metric_list:
   - metric: pass_at_1
     aggregation: mean

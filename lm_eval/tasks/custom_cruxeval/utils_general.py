@@ -1,12 +1,12 @@
 import ast
 import numpy as np
-from lm_eval.tasks.cruxeval.utils_execute import check_correctness
+from .utils_execute import check_correctness
 
 # Allow these literal-ish constructs for CRUXEval-O generations:
 # - constants: numbers, strings, bools, None
 # - containers: list/tuple/set/dict literals (including nesting)
 # - unary +/- on constants (e.g. -1)
-# - basic binary ops on literal-ish operands (e.g. "a" +check_correctness "b", 1 + 2)
+# - basic binary ops on literal-ish operands (e.g. "a" + "b", 1 + 2)
 _ALLOWED_EXPR_NODES = (
     ast.Expression,
     ast.Constant,
