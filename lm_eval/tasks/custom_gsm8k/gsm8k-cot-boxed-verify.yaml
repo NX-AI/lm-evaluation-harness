@@ -42,6 +42,10 @@ doc_to_text: |
 generation_kwargs:
   do_sample: false
   until:
+    # doc_to_text opens every example with this phrase and fewshot_delimiter is "\n\n", so a
+    # run-on generation fabricates a following example. process_results extracts the last box,
+    # which would then score the fabricated answer instead of the requested one.
+    - "\n\nGiven the following problem"
     - '<|eot_id|>'
     - '<|start_header_id|>user<|end_header_id|>'
     - 'Q:'
