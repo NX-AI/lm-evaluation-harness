@@ -1,20 +1,17 @@
 import logging
+import re
+import signal
 from typing import Dict, List
 
 import datasets
 
 
 try:
-    import re
-    import signal
-
-    import sympy
     from math_verify import LatexExtractionConfig, parse, verify
-    from sympy.parsing.latex import parse_latex
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        "`math-verify`, `sympy>=1.12`, and antlr4-python3-runtime==4.11 is required for generating translation task prompt templates. \
-please install via pip install lm-eval[math] or pip install -e .[math]",
+        "`math-verify` is required for the leaderboard MATH task. "
+        "Please install it via pip install math-verify.",
     )
 
 
@@ -174,38 +171,10 @@ def is_equiv(x1: str, x2: str) -> bool:
     eval_logger = logging.getLogger(__name__)
     try:
         with timeout(seconds=1):
-            try:
-                parsed_x1 = parse_latex(x1)
-                parsed_x2 = parse_latex(x2)
-            except (
-                sympy.parsing.latex.errors.LaTeXParsingError,
-                sympy.SympifyError,
-                TypeError,
-            ):
-                eval_logger.debug(f"couldn't parse one of {x1} or {x2}")
-                return False
-
-            try:
-                diff = parsed_x1 - parsed_x2
-            except TypeError:
-                eval_logger.debug(f"couldn't subtract {x1} and {x2}")
-                return False
-
-            try:
-                if sympy.simplify(diff) == 0:
-                    return True
-                else:
-                    return False
-            except ValueError:
-                eval_logger.debug(
-                    f"Had some trouble simplifying when comparing {x1} and {x2}"
-                )
+            return verify(parse(x2), parse(x1))
     except TimeoutError:
         eval_logger.debug(f"Timed out comparing {x1} and {x2}")
         return False
-    except ImportError as e:
-        eval_logger.error(e)
-        raise
     except Exception as e:
         eval_logger.debug(f"Failed comparing {x1} and {x2} with {e}")
         return False
