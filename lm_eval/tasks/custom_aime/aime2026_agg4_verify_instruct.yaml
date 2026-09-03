@@ -1,0 +1,4 @@
+include: aime2024_agg4_verify_instruct.yaml
+task: custom_aime2026_agg4_verify_instruct
+dataset_path: MathArena/aime_2026
+doc_to_text: !function aime_verutils.doc_to_text_instruct_2026

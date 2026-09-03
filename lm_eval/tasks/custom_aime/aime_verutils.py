@@ -39,6 +39,14 @@ Problem:
 {Question}
 """
 
+QUERY_TEMPLATE_INSTRUCT_BOXED_2026 = """Solve the following AIME 2026 problem.
+
+Return your final answer as an integer from 0 to 999, and put it in \\boxed{{}} on the last line.
+
+Problem:
+{Question}
+"""
+
 def doc_to_text(doc: dict) -> str:
     q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
     return QUERY_TEMPLATE.format(Question=q)
@@ -57,6 +65,11 @@ def doc_to_text_instruct_2024(doc: dict) -> str:
 def doc_to_text_instruct_2025(doc: dict) -> str:
     q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
     return QUERY_TEMPLATE_INSTRUCT_BOXED_2025.format(Question=q)
+
+
+def doc_to_text_instruct_2026(doc: dict) -> str:
+    q = doc.get("problem") or doc.get("Problem") or doc.get("question") or doc.get("Question") or ""
+    return QUERY_TEMPLATE_INSTRUCT_BOXED_2026.format(Question=q)
 
 def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
     def _process_doc(doc: dict) -> dict:
