@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -42,7 +43,6 @@ DEFAULT_TOKEN_ANNOTATIONS_PATH = (
     Path(__file__).resolve().parent / "qwen3_4b_it_longbench_v2_tokens.jsonl"
 )
 DATASET_LOAD_KWARGS = {
-    "cache_dir",
     "data_dir",
     "data_files",
     "download_config",
@@ -90,8 +90,8 @@ TOKEN_LENGTH_BUCKET_ALIASES = {
 }
 
 _EXPLICIT_ANSWER_PATTERNS = (
-    re.compile(r"the correct answer is\s*\(?\s*([ABCD])\s*\)?", re.IGNORECASE),
-    re.compile(r"\banswer\s*(?:is|:)\s*\(?\s*([ABCD])\s*\)?", re.IGNORECASE),
+    re.compile(r"the correct answer is\s*\(?\s*([ABCD])\b\s*\)?", re.IGNORECASE),
+    re.compile(r"\banswer\s*(?:is|:)\s*\(?\s*([ABCD])\b\s*\)?", re.IGNORECASE),
 )
 _STANDALONE_ANSWER_PATTERN = re.compile(r"^\s*\(?\s*([ABCD])\s*\)?[\s\.\)]*$")
 _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
@@ -188,16 +188,20 @@ def _augment_and_filter_dataset(
     dataset: datasets.Dataset,
     *,
     sub_domain: str | None = None,
-    token_length_bucket: str | None = None,
+    token_length_bucket: str | list[str] | None = None,
     annotations_path: str | None = None,
     prompt_style: str | None = None,
 ) -> datasets.Dataset:
-    filter_bucket = (
-        normalize_token_length_bucket(token_length_bucket)
-        if token_length_bucket is not None
-        else None
-    )
-    should_use_annotations = annotations_path is not None or filter_bucket is not None
+    if token_length_bucket is None:
+        filter_buckets = None
+    else:
+        buckets = (
+            [token_length_bucket]
+            if isinstance(token_length_bucket, str)
+            else token_length_bucket
+        )
+        filter_buckets = {normalize_token_length_bucket(bucket) for bucket in buckets}
+    should_use_annotations = annotations_path is not None or filter_buckets is not None
     annotations: dict[str, dict[str, Any]] = {}
     if should_use_annotations:
         resolved_annotations_path = (
@@ -205,9 +209,7 @@ def _augment_and_filter_dataset(
             if annotations_path is not None
             else get_token_annotations_path(prompt_style).resolve()
         )
-        annotations = load_token_annotations(
-            str(resolved_annotations_path)
-        )
+        annotations = load_token_annotations(str(resolved_annotations_path))
 
     rows: list[dict[str, Any]] = []
     missing_annotation_ids: list[str] = []
@@ -216,23 +218,26 @@ def _augment_and_filter_dataset(
         if sub_domain is not None and str(row.get("sub_domain")) != sub_domain:
             continue
 
-        annotation = annotations.get(str(row.get("_id"))) if should_use_annotations else None
+        annotation = annotations.get(str(row.get("_id")))
         if annotation is not None:
             row[TOKEN_COUNT_FIELD] = int(annotation[TOKEN_COUNT_FIELD])
             row[CONTEXT_TOKEN_COUNT_FIELD] = int(annotation[CONTEXT_TOKEN_COUNT_FIELD])
             row[TOKEN_LENGTH_BUCKET_FIELD] = normalize_token_length_bucket(
                 str(annotation[TOKEN_LENGTH_BUCKET_FIELD])
             )
-        elif should_use_annotations and filter_bucket is not None:
+        elif filter_buckets is not None:
             missing_annotation_ids.append(str(row.get("_id")))
             continue
 
-        if filter_bucket is not None and row.get(TOKEN_LENGTH_BUCKET_FIELD) != filter_bucket:
+        if (
+            filter_buckets is not None
+            and row.get(TOKEN_LENGTH_BUCKET_FIELD) not in filter_buckets
+        ):
             continue
 
         rows.append(row)
 
-    if missing_annotation_ids and filter_bucket is not None:
+    if missing_annotation_ids:
         preview = ", ".join(missing_annotation_ids[:5])
         raise KeyError(
             "Missing token annotations for LongBench v2 docs while filtering by bucket: "
@@ -248,14 +253,20 @@ def load_longbench2_dataset(
     split: str = DEFAULT_SPLIT,
     dataset_name: str | None = None,
     sub_domain: str | None = None,
-    token_length_bucket: str | None = None,
+    token_length_bucket: str | list[str] | None = None,
     annotations_path: str | None = None,
     prompt_style: str | None = None,
+    dataset_cache_dir: str | Path | None = None,
     **dataset_kwargs: Any,
 ) -> datasets.DatasetDict:
     load_kwargs = {
-        key: value for key, value in dict(dataset_kwargs).items() if key in DATASET_LOAD_KWARGS
+        key: value
+        for key, value in dataset_kwargs.items()
+        if key in DATASET_LOAD_KWARGS
     }
+    # Task metadata can contain the model's cache_dir. Use a separate dataset option.
+    if dataset_cache_dir is not None:
+        load_kwargs["cache_dir"] = dataset_cache_dir
     if dataset_name is not None:
         load_kwargs["name"] = dataset_name
 
@@ -495,3 +506,44 @@ def process_results(doc: dict[str, Any], results: list[Any]) -> dict[str, float]
     gold = normalize_answer_label(doc.get("answer"))
     predicted = extract_answer_label(extract_response_text(results))
     return {"acc": float(predicted == gold and gold != "")}
+
+
+def _flatten_responses(results: list[Any] | tuple[Any, ...]) -> list[str]:
+    responses: list[str] = []
+    for item in results:
+        if isinstance(item, (list, tuple)):
+            responses.extend(_flatten_responses(item))
+        else:
+            responses.append("" if item is None else str(item))
+    return responses
+
+
+def _unfinished_reasoning(response: str) -> bool:
+    response = response.lower()
+    return response.rfind("<think>") > response.rfind("</think>")
+
+
+def process_results_agg(doc: dict[str, Any], results: list[Any]) -> dict[str, float]:
+    """Score repeated generations and break tied votes by first occurrence."""
+    gold = normalize_answer_label(doc.get("answer"))
+    responses = _flatten_responses(results)
+    if not responses:
+        return {
+            "acc": 0.0,
+            "majority_acc": 0.0,
+            "no_answer_rate": 1.0,
+            "num_generations": 0,
+        }
+
+    predictions = [
+        None if _unfinished_reasoning(response) else extract_answer_label(response)
+        for response in responses
+    ]
+    votes = Counter(prediction for prediction in predictions if prediction is not None)
+    majority = votes.most_common(1)[0][0] if votes else None
+    return {
+        "acc": votes[gold] / len(predictions),
+        "majority_acc": float(majority == gold),
+        "no_answer_rate": predictions.count(None) / len(predictions),
+        "num_generations": len(predictions),
+    }

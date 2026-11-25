@@ -4,6 +4,8 @@ from collections.abc import Callable
 
 import datasets
 
+from lm_eval import simple_evaluate
+from lm_eval.models.dummy import DummyLM
 from lm_eval.tasks import TaskManager
 from lm_eval.tasks.custom_longbench2 import utils as longbench2_utils
 
@@ -124,7 +126,9 @@ def test_load_longbench2_dataset_reads_requested_split(monkeypatch) -> None:
     assert docs[0]["sub_domain"] == "Academic"
 
 
-def test_load_longbench2_dataset_ignores_harness_metadata_kwargs(monkeypatch) -> None:
+def test_load_longbench2_dataset_ignores_harness_metadata_kwargs(
+    monkeypatch, tmp_path
+) -> None:
     rows = [_make_row()]
     seen_kwargs: dict[str, object] = {}
 
@@ -140,12 +144,20 @@ def test_load_longbench2_dataset_ignores_harness_metadata_kwargs(monkeypatch) ->
     loaded = longbench2_utils.load_longbench2_dataset(
         config_source="generated.yaml",
         version="1.0",
-        pretrained="/tmp/model",
+        pretrained=tmp_path / "model",
+        cache_dir=tmp_path / "model-cache",
         batch_size=1,
     )
 
     assert len(loaded[longbench2_utils.DEFAULT_SPLIT]) == 1
     assert seen_kwargs == {}
+
+    dataset_cache = tmp_path / "dataset-cache"
+    longbench2_utils.load_longbench2_dataset(
+        cache_dir=tmp_path / "model-cache",
+        dataset_cache_dir=dataset_cache,
+    )
+    assert seen_kwargs == {"cache_dir": dataset_cache}
 
 
 def test_load_longbench2_dataset_filters_with_annotations(
@@ -160,6 +172,7 @@ def test_load_longbench2_dataset_filters_with_annotations(
             "sub_domain": "Legal",
             "question": "Which legal option is correct?",
         },
+        {**_make_row(), "_id": "row-3"},
     ]
     monkeypatch.setattr(
         longbench2_utils.datasets,
@@ -173,6 +186,7 @@ def test_load_longbench2_dataset_filters_with_annotations(
             [
                 '{"_id":"row-1","qwen_4b_it_tokens":12000,"qwen_4b_it_context_tokens":11000,"qwen_4b_it_length_bucket":"0_16k"}',
                 '{"_id":"row-2","qwen_4b_it_tokens":40000,"qwen_4b_it_context_tokens":39000,"qwen_4b_it_length_bucket":"32k_64k"}',
+                '{"_id":"row-3","qwen_4b_it_tokens":20000,"qwen_4b_it_context_tokens":19000,"qwen_4b_it_length_bucket":"16k_32k"}',
             ]
         )
         + "\n",
@@ -190,6 +204,14 @@ def test_load_longbench2_dataset_filters_with_annotations(
     assert docs[0]["_id"] == "row-1"
     assert docs[0][longbench2_utils.TOKEN_COUNT_FIELD] == 12000
     assert docs[0][longbench2_utils.TOKEN_LENGTH_BUCKET_FIELD] == "0_16k"
+
+    loaded = longbench2_utils.load_longbench2_dataset(
+        token_length_bucket=["0-16k", "16k_32k"],
+        annotations_path=str(annotations_path),
+    )
+    assert list(loaded[longbench2_utils.DEFAULT_SPLIT]["_id"]) == ["row-1", "row-3"]
+
+
 def test_task_manager_loads_custom_longbench2_group(monkeypatch) -> None:
     rows = [_make_row(answer="C")]
     monkeypatch.setattr(
@@ -238,3 +260,46 @@ def test_task_manager_loads_custom_longbench2_cot_group(monkeypatch) -> None:
         task.config.generation_kwargs["max_gen_toks"]
         == longbench2_utils.DEFAULT_COT_MAX_GEN_TOKS
     )
+
+
+def test_longbench2_agg8_scores_all_sampled_generations(monkeypatch) -> None:
+    annotations = longbench2_utils.load_token_annotations()
+    doc_id = next(
+        doc_id
+        for doc_id, row in annotations.items()
+        if row[longbench2_utils.TOKEN_LENGTH_BUCKET_FIELD] == "0_16k"
+    )
+    monkeypatch.setattr(
+        longbench2_utils.datasets,
+        "load_dataset",
+        _load_dataset_factory([{**_make_row(), "_id": doc_id}]),
+    )
+
+    class SampledLM(DummyLM):
+        def generate_until(self, requests, disable_tqdm=False):
+            assert len(requests) == 8
+            for request in requests:
+                assert request.args[1]["do_sample"] is True
+                assert request.args[1]["temperature"] > 0
+            return [
+                r"\boxed{B}",
+                "<think>I considered (D)</think>\nAnswer: B",
+                "Answer: C",
+                "C",
+                "<think>First thought</think><THINK>Answer: B",
+                "<think>Answer: B",
+                "The correct answer is bound to depend on missing information.",
+                None,
+            ]
+
+    task_name = "custom_longbench2_cot_le_32k_agg8"
+    result = simple_evaluate(
+        model=SampledLM(), tasks=[task_name], bootstrap_iters=0, log_samples=False
+    )
+
+    assert result is not None
+    metrics = result["results"][task_name]
+    assert metrics["acc,all"] == 0.25
+    assert metrics["majority_acc,all"] == 1.0
+    assert metrics["no_answer_rate,all"] == 0.5
+    assert metrics["num_generations,all"] == 8

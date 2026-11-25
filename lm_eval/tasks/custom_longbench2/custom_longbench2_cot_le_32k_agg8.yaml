@@ -1,0 +1,36 @@
+include: _custom_longbench2_cot_base.yaml
+task: custom_longbench2_cot_le_32k_agg8
+task_alias: "LongBench v2 CoT <= 32k tokens, 8 samples per question"
+# Use the same 116 documents as the custom_longbench2_cot_le_32k group.
+dataset_kwargs:
+  repo_id: zai-org/LongBench-v2
+  split: train
+  prompt_style: cot
+  token_length_bucket: [0_16k, 16k_32k]
+generation_kwargs:
+  max_gen_toks: 512
+  do_sample: true
+  temperature: 0.6
+  until: []
+repeats: 8
+filter_list:
+  - name: "all"
+    filter:
+      - function: "take_first_k"
+        k: 8
+process_results: !function utils.process_results_agg
+metric_list:
+  - metric: acc
+    aggregation: mean
+    higher_is_better: true
+  - metric: majority_acc
+    aggregation: mean
+    higher_is_better: true
+  - metric: no_answer_rate
+    aggregation: mean
+    higher_is_better: false
+  - metric: num_generations
+    aggregation: sum
+    higher_is_better: false
+metadata:
+  version: 1.0
