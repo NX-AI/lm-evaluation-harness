@@ -615,8 +615,24 @@ def _lcb_artifact_dir() -> Path:
     return Path(os.getcwd())
 
 
+def _sandbox_interpreter_has_livecodebench() -> bool:
+    """Whether the evaluator's interpreter (``LMEVAL_LCB_INTERPRETER``) can import livecodebench.
+
+    The evaluator runs in the sandbox with that interpreter, so livecodebench may live in a separate
+    environment from lm-eval's."""
+    interpreter = os.environ.get("LMEVAL_LCB_INTERPRETER")
+    if not interpreter or not _is_sandbox_healthy():
+        return False
+    out = _sandbox_execute_shell_with_retries(
+        f"{shlex.quote(interpreter)} -c 'import livecodebench.evaluate'", timeout_s=300
+    )
+    return out.get("process_status") == "completed" and out.get("return_code") == 0
+
+
 def _ensure_livecodebench_installed(*, allow_auto_install: bool) -> None:
     if importlib.util.find_spec("livecodebench") is not None:
+        return
+    if _sandbox_interpreter_has_livecodebench():
         return
     if not allow_auto_install:
         raise ModuleNotFoundError(
