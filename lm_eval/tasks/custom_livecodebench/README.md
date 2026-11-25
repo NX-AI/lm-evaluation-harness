@@ -33,6 +33,13 @@ Note: the task YAMLs explicitly set `generation_kwargs.until: []` so lm-eval doe
      - `pip install git+https://github.com/wasiahmad/livecodebench.git`
 2. A local sandbox server must be running and reachable at `NEMO_SKILLS_SANDBOX_HOST:NEMO_SKILLS_SANDBOX_PORT`.
 
+`livecodebench` may live in its own environment: point `LMEVAL_LCB_INTERPRETER` at that
+environment's Python and lm-eval does not need the package itself. The evaluator reloads
+`livecodebench/code_generation_lite` (`refs/pr/7`) inside the sandbox, so start the sandbox with
+the same `HF_HOME` as lm-eval (and `HF_DATASETS_OFFLINE=1` on nodes without network). Loading
+the release's test cases takes a minute or two per evaluation, so keep `LMEVAL_LCB_TIMEOUT_BUFFER`
+well above the 60 s default.
+
 ## Starting the sandbox server (sidecar)
 
 Use the helper script:

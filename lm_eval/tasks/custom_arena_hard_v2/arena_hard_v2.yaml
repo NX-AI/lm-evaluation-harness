@@ -1,0 +1,34 @@
+# Arena-Hard v2.0 (lmarena/arena-hard-auto), answer generation.
+# 750 prompts: 500 hard_prompt (judged against o3-mini-2025-01-31) and 250 creative_writing
+# (judged against gemini-2.0-flash-001). This task only generates the model's answers; judging and
+# scoring are separate steps (scripts/arena_hard_v2/{judge,score}.py), see README.md.
+task: custom_arena_hard_v2
+# question.jsonl of the HF dataset lmarena-ai/arena-hard-auto at a pinned revision (utils.load_questions;
+# works offline once the file is in the hub cache).
+custom_dataset: !function utils.load_questions
+test_split: test
+output_type: generate_until
+doc_to_text: "{{prompt}}"
+doc_to_target: ""
+process_results: !function utils.process_results
+generation_kwargs:
+  # Stop only at the end-of-turn token (an empty list keeps lm-eval from stopping at "\n\n").
+  until: []
+  do_sample: true
+  # Qwen3-2507 instruct recommendations (model card "Best Practices").
+  temperature: 0.7
+  top_p: 0.8
+  top_k: 20
+  min_p: 0.0
+  max_gen_toks: 16384
+repeats: 1
+num_fewshot: 0
+metric_list:
+  - metric: answered
+    aggregation: mean
+    higher_is_better: true
+  - metric: answer_chars
+    aggregation: mean
+    higher_is_better: false
+metadata:
+  version: 1.0
